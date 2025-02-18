@@ -1,0 +1,14 @@
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\bin\Debug\net8.0\ShadowTalk-Test.exe
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\bin\Debug\net8.0\ShadowTalk-Test.deps.json
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\bin\Debug\net8.0\ShadowTalk-Test.runtimeconfig.json
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\bin\Debug\net8.0\ShadowTalk-Test.dll
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\bin\Debug\net8.0\ShadowTalk-Test.pdb
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.AssemblyInfoInputs.cache
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.AssemblyInfo.cs
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.csproj.CoreCompileInputs.cache
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.dll
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\refint\ShadowTalk-Test.dll
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.pdb
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.genruntimeconfig.cache
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ref\ShadowTalk-Test.dll
