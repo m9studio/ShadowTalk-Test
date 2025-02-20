@@ -18,7 +18,7 @@ class Client
     public void ConnectToServer(string serverIp, ushort serverPort)
     {
         _serverSocket.Connect(new IPEndPoint(IPAddress.Parse(serverIp), serverPort));
-        _serverSocket.SendMessage($"register:{_name}");
+        _serverSocket.SendMessage($"register {_name} {_localPort}");
 
         Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения
     }
@@ -63,20 +63,6 @@ class Client
     }
 
 
-
-
-    public async Task<List<string>> GetClientsAsync()
-    {
-        _serverSocket.SendMessage("get_clients");
-
-        string response = _serverSocket.GetMessage();
-        if (response.StartsWith("clients:"))
-        {
-            return new List<string>(response.Substring(8).Split(','));
-        }
-        return new List<string>();
-    }
-
     public void ConnectToPeer(string peerIp, ushort peerPort, string peerName)
     {
         Socket peerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -92,5 +78,7 @@ class Client
     {
         if (_peers.ContainsKey(user))
             _peers[user].SendMessage(text);
+        else
+            _serverSocket.SendMessage($"connect {user} {_localPort}");
     }
 }

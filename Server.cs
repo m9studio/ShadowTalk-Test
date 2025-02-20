@@ -34,18 +34,22 @@ class Server
         try
         {
             string request = clientSocket.GetMessage();
-            string[] parts = request.Split(':');
+            string[] parts = request.Split(' ');
 
             if (parts[0] == "register")
             {
                 string name = parts[1];
                 _clients[name] = clientSocket;
-                Console.WriteLine($"Клиент {name} подключился [{clientSocket.RemoteEndPoint}]");
+                Console.WriteLine($"Клиент {name} подключился [{clientSocket.RemoteEndPoint}] ");
             }
-            else if (parts[0] == "get_clients")
+            else if (parts[0] == "connect")
             {
-                string clientList = string.Join(",", _clients.Keys);
-                clientSocket.SendMessage($"clients:{clientList}");
+                if (_clients.ContainsKey(parts[1]))
+                {
+                    _clients[parts[1]].SendMessage(parts[2]);
+                }
+               // string clientList = string.Join(",", _clients.Keys);
+                //clientSocket.SendMessage($"clients:{clientList}");
             }
         }
         catch (Exception ex)

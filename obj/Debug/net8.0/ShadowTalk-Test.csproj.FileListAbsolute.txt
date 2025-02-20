@@ -12,3 +12,4 @@ C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\refint\Shadow
 C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.pdb
 C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.genruntimeconfig.cache
 C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ref\ShadowTalk-Test.dll
+C:\Users\mina987\Documents\GitHub\ShadowTalk-Test\obj\Debug\net8.0\ShadowTalk-Test.sourcelink.json
