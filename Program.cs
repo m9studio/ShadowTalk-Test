@@ -29,7 +29,7 @@ class Program
                     );
 
                     // Печать для отладки
-                    Console.WriteLine($"Запуск: {relativePath}");
+                    //Console.WriteLine($"Запуск: {relativePath}");
 
                     // Запускаем процесс
                     Process.Start(new ProcessStartInfo
@@ -54,9 +54,8 @@ class Program
                 {
                     string? line = Console.ReadLine();
                     if (line == null) continue;
-
                     string[] command = line.Split(" ");
-                    if (command.Length == 3)
+                    if (command.Length == 2)
                     {
                         client.SendMessage(command[0], command[1]);
                     }

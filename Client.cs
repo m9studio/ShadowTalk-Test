@@ -77,8 +77,14 @@ class Client
     public void SendMessage(string user, string text)
     {
         if (_peers.ContainsKey(user))
+        {
+            Console.WriteLine(1);
             _peers[user].SendMessage(text);
+        }
         else
+        {
+            Console.WriteLine(2);
             _serverSocket.SendMessage($"connect {user} {_localPort}");
+        }
     }
 }

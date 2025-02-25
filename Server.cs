@@ -22,35 +22,43 @@ class Server
 
     private async Task AcceptClientsAsync()
     {
+        //Console.WriteLine(1);
         while (true)
         {
             Socket clientSocket = await _serverSocket.AcceptAsync();
-            _ = HandleClientAsync(clientSocket);
+            _ = Task.Run(() => HandleClientAsync(clientSocket));
+            Console.WriteLine("new connect");
         }
     }
 
     private async Task HandleClientAsync(Socket clientSocket)
     {
+        string name = "none";
         try
         {
-            string request = clientSocket.GetMessage();
-            string[] parts = request.Split(' ');
+            while (clientSocket.Connected)
+            {
+                string request = clientSocket.GetMessage();
+                Console.WriteLine(request);
+                string[] parts = request.Split(' ');
 
-            if (parts[0] == "register")
-            {
-                string name = parts[1];
-                _clients[name] = clientSocket;
-                Console.WriteLine($"Клиент {name} подключился [{clientSocket.RemoteEndPoint}] ");
-            }
-            else if (parts[0] == "connect")
-            {
-                if (_clients.ContainsKey(parts[1]))
+                if (parts[0] == "register")
                 {
-                    _clients[parts[1]].SendMessage(parts[2]);
+                    name = parts[1];
+                    _clients[name] = clientSocket;
+                    Console.WriteLine($"{name} подключился [{clientSocket.RemoteEndPoint}]");
                 }
-               // string clientList = string.Join(",", _clients.Keys);
-                //clientSocket.SendMessage($"clients:{clientList}");
+                else if (parts[0] == "connect")
+                {
+                    if (_clients.ContainsKey(parts[1]))
+                    {
+                        _clients[parts[1]].SendMessage(parts[2]);
+                    }
+                    // string clientList = string.Join(",", _clients.Keys);
+                    //clientSocket.SendMessage($"clients:{clientList}");
+                }
             }
+            Console.WriteLine($"{name} отключился [{clientSocket.RemoteEndPoint}]");
         }
         catch (Exception ex)
         {

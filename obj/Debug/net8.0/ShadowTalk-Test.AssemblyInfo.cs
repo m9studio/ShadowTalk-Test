@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ShadowTalk-Test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7487786742c16c5a73da96df45b071c29a9a0df5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+16bc5608b557f20edd71ce77f22593065d9e9fef")]
 [assembly: System.Reflection.AssemblyProductAttribute("ShadowTalk-Test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ShadowTalk-Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
