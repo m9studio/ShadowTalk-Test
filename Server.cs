@@ -34,35 +34,39 @@ class Server
     private async Task HandleClientAsync(Socket clientSocket)
     {
         string name = "none";
+        IPEndPoint remoteIpEndPoint = clientSocket.RemoteEndPoint as IPEndPoint;
+        IPEndPoint localIpEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
         try
         {
             while (clientSocket.Connected)
             {
                 string request = clientSocket.GetMessage();
-                Console.WriteLine(request);
                 string[] parts = request.Split(' ');
 
                 if (parts[0] == "register")
                 {
                     name = parts[1];
                     _clients[name] = clientSocket;
-                    Console.WriteLine($"{name} подключился [{clientSocket.RemoteEndPoint}]");
+                    Console.WriteLine($"{name}: подключился [{clientSocket.RemoteEndPoint}]");
                 }
                 else if (parts[0] == "connect")
                 {
+                    Console.WriteLine($"{name}: пытается связаться с [{parts[1]}], его адресс [{remoteIpEndPoint.Address}:{parts[2]}]");
                     if (_clients.ContainsKey(parts[1]))
                     {
-                        _clients[parts[1]].SendMessage(parts[2]);
+                        _clients[parts[1]].SendMessage("connect " + name + " " + remoteIpEndPoint.Address + " " + parts[2]);
                     }
-                    // string clientList = string.Join(",", _clients.Keys);
-                    //clientSocket.SendMessage($"clients:{clientList}");
+                }
+                else
+                {
+                    Console.WriteLine(name + ": " + request);
                 }
             }
-            Console.WriteLine($"{name} отключился [{clientSocket.RemoteEndPoint}]");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Ошибка: {ex.Message}");
         }
+        Console.WriteLine($"{name} отключился [{clientSocket.RemoteEndPoint}]");
     }
 }

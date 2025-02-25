@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Xml.Linq;
 
 class Client
 {
@@ -20,7 +21,24 @@ class Client
         _serverSocket.Connect(new IPEndPoint(IPAddress.Parse(serverIp), serverPort));
         _serverSocket.SendMessage($"register {_name} {_localPort}");
 
+        Task.Run(StartListeningAsyncServer); // Клиент начинает слушать входящие соединения
         Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения
+    }
+    private async Task StartListeningAsyncServer()
+    {
+        try
+        {
+            while (_serverSocket.Connected)
+            {
+                string request = _serverSocket.GetMessage();
+                Console.WriteLine("Server: " + request);
+                string[] parts = request.Split(' ');
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка: {ex.Message}");
+        }
     }
 
     private async Task StartListeningAsync()
