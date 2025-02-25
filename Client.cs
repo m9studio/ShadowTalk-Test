@@ -21,8 +21,8 @@ class Client
         _serverSocket.Connect(new IPEndPoint(IPAddress.Parse(serverIp), serverPort));
         _serverSocket.SendMessage($"register {_name} {_localPort}");
 
-        Task.Run(StartListeningAsyncServer); // Клиент начинает слушать входящие соединения
-        Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения
+        Task.Run(StartListeningAsyncServer); // Клиент начинает слушать входящие сообщения от сервера
+        Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения от других пользователей
     }
     private async Task StartListeningAsyncServer()
     {
@@ -83,6 +83,7 @@ class Client
 
     public void ConnectToPeer(string peerIp, ushort peerPort, string peerName)
     {
+        //TODO обдумать
         Socket peerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         peerSocket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
         peerSocket.SendMessage(_name); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
@@ -90,17 +91,29 @@ class Client
 
         Console.WriteLine($"{_name}: Подключился к {peerName}");
     }
-    public void SendMessage(string user, string text)
+    public bool SendMessage(string user, string text)
     {
-        if (_peers.ContainsKey(user))
+        //Если есть соединение с данным пользователем, то отправляем сообщение
+        if (_peers.ContainsKey(user)) 
         {
-            Console.WriteLine(1);
             _peers[user].SendMessage(text);
+            return true;
         }
+        //Иначе запрашиваем сервер, на соединение с пользователем
         else
         {
-            Console.WriteLine(2);
             _serverSocket.SendMessage($"connect {user} {_localPort}");
+            //ждем подлючение от user, после чего отправляем сообщение
+            for(int i = 0; i < 6000; i++)
+            {
+                Thread.Sleep(10);//10 * 6 (6000 / 1000) = 60 сек на ожидание подключение
+                if(_peers.ContainsKey(user))
+                {
+                    _peers[user].SendMessage(text);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

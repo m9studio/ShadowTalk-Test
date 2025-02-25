@@ -2,6 +2,8 @@
 
 class Program
 {
+    //TODO добавить комментарии, чтобы не запутаться
+    //TODO после успешных тестов, разделить на 2 проекта Server и Client
     static void Main(string[] args)
     {
         int i = 0;

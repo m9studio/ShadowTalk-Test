@@ -26,6 +26,8 @@ class Server
         while (true)
         {
             Socket clientSocket = await _serverSocket.AcceptAsync();
+            //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл
+            //TODO может сделать отдельный метод для регистрации и уже от него выводить в HandleClientAsync?
             _ = Task.Run(() => HandleClientAsync(clientSocket));
             Console.WriteLine("new connect");
         }
@@ -43,12 +45,14 @@ class Server
                 string request = clientSocket.GetMessage();
                 string[] parts = request.Split(' ');
 
-                if (parts[0] == "register")
+                //Пользователь хочет себя зарегистрировать
+                if (parts[0] == "register") 
                 {
                     name = parts[1];
                     _clients[name] = clientSocket;
                     Console.WriteLine($"{name}: подключился [{clientSocket.RemoteEndPoint}]");
                 }
+                //Пользователь запрашивает подключение
                 else if (parts[0] == "connect")
                 {
                     Console.WriteLine($"{name}: пытается связаться с [{parts[1]}], его адресс [{remoteIpEndPoint.Address}:{parts[2]}]");
