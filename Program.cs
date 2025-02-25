@@ -5,8 +5,12 @@ class Program
     static void Main(string[] args)
     {
         int i = 0;
+        Console.SetWindowSize(32, 24);
+        Console.SetBufferSize(32, 24);
         if (args.Length == 0)
         {
+            Console.Title = "Server";
+            Console.SetWindowPosition(0, 0);
             Server server = new Server(33300);
             server.Open();
             i++;
@@ -18,7 +22,7 @@ class Program
                 if (line != null && line.Length > 1)
                 {
                     string clientName = line;
-                    ushort clientPort = (ushort)(33300 + i);
+                    //ushort clientPort = (ushort)(33300 + i);
 
 
 
@@ -35,7 +39,7 @@ class Program
                     Process.Start(new ProcessStartInfo
                     {
                         FileName = relativePath, // передаем относительный путь
-                        Arguments = $" {clientName} {clientPort}",
+                        Arguments = $" {clientName} {i}",
                         UseShellExecute = true,
                         CreateNoWindow = false
                     });
@@ -46,9 +50,10 @@ class Program
         }
         else if (args.Length == 2)
         {
+            Console.Title = args[0];
             try
             {
-                Client client = new Client(args[0], ushort.Parse(args[1]));
+                Client client = new Client(args[0], (ushort)(33300 + int.Parse(args[1])));
                 client.ConnectToServer("127.0.0.1", 33300);
                 while (true)
                 {

@@ -90,8 +90,6 @@ class Client
 
         Console.WriteLine($"{_name}: Подключился к {peerName}");
     }
-
-
     public void SendMessage(string user, string text)
     {
         if (_peers.ContainsKey(user))
