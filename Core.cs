@@ -33,4 +33,10 @@ public static class Core
         socket.Send(Encoding.UTF8.GetBytes(text));
     }
 
+    public static void ConsoleWriteLine(this Exception exception)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Ошибка: {exception.Message}\n{exception.StackTrace}");
+        Console.ResetColor();
+    }
 }

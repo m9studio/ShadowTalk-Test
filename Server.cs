@@ -16,7 +16,9 @@ class Server
     public bool Open()
     {
         Task.Run(AcceptClientsAsync);
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("Сервер запущен...");
+        Console.ResetColor();
         return true;
     }
 
@@ -29,7 +31,9 @@ class Server
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл
             //TODO может сделать отдельный метод для регистрации и уже от него выводить в HandleClientAsync?
             _ = Task.Run(() => HandleClientAsync(clientSocket));
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("new connect");
+            Console.ResetColor();
         }
     }
 
@@ -50,12 +54,16 @@ class Server
                 {
                     name = parts[1];
                     _clients[name] = clientSocket;
+                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"{name}: подключился [{clientSocket.RemoteEndPoint}]");
+                    Console.ResetColor();
                 }
                 //Пользователь запрашивает подключение
                 else if (parts[0] == "connect")
                 {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine($"{name}: пытается связаться с [{parts[1]}], его адресс [{remoteIpEndPoint.Address}:{parts[2]}]");
+                    Console.ResetColor();
                     if (_clients.ContainsKey(parts[1]))
                     {
                         _clients[parts[1]].SendMessage("connect " + name + " " + remoteIpEndPoint.Address + " " + parts[2]);
@@ -69,7 +77,7 @@ class Server
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Ошибка: {ex.Message}");
+            ex.ConsoleWriteLine();
         }
         Console.WriteLine($"{name} отключился [{clientSocket.RemoteEndPoint}]");
     }

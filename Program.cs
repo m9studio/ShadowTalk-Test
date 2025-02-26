@@ -8,8 +8,8 @@ class Program
     {
         ushort Port = 55500;
         int i = 0;
-        Console.SetWindowSize(32, 24);
-        Console.SetBufferSize(32, 24);
+        Console.SetWindowSize(48, 30);
+        Console.SetBufferSize(48, 30);
         if (args.Length == 0)
         {
             Console.Title = "Server";
@@ -65,7 +65,13 @@ class Program
                     string[] command = line.Split(" ");
                     if (command.Length == 2)
                     {
-                        client.SendMessage(command[0], command[1]);
+                        Task.Run(() =>
+                        {
+                            if(!client.SendMessage(command[0], command[1]))
+                            {
+                                Console.WriteLine("Не удалось отправить письмо для " + command[0]);
+                            }
+                        });
                     }
                     else if (command.Length == 1 && command[0] == "stop")
                     {
