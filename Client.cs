@@ -33,11 +33,16 @@ class Client
                 string request = _serverSocket.GetMessage();
                 Console.WriteLine("Server: " + request);
                 string[] parts = request.Split(' ');
+                if(parts.Length == 4 && parts[0] == "connect")
+                {
+                    ConnectToPeer(parts[2], ushort.Parse(parts[3]), parts[1]);
+                }
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Ошибка: {ex.Message}");
+            Console.WriteLine($"Ошибка: {ex.StackTrace}");
         }
     }
 
@@ -70,7 +75,7 @@ class Client
             while (true)
             {
                 string message = peerSocket.GetMessage();
-                Console.WriteLine($"{_name} <- {peerName}: {message}");
+                Console.WriteLine($"{peerName}: {message}");
             }
         }
         catch (Exception ex)
@@ -83,13 +88,14 @@ class Client
 
     public void ConnectToPeer(string peerIp, ushort peerPort, string peerName)
     {
-        //TODO обдумать
+        Console.WriteLine($"Подключаемся к {peerName}");
         Socket peerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         peerSocket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
         peerSocket.SendMessage(_name); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
         _peers[peerName] = peerSocket;
 
-        Console.WriteLine($"{_name}: Подключился к {peerName}");
+        Task.Run(() => ListenToPeer(peerName, peerSocket));
+
     }
     public bool SendMessage(string user, string text)
     {

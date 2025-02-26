@@ -6,6 +6,7 @@ class Program
     //TODO после успешных тестов, разделить на 2 проекта Server и Client
     static void Main(string[] args)
     {
+        ushort Port = 55500;
         int i = 0;
         Console.SetWindowSize(32, 24);
         Console.SetBufferSize(32, 24);
@@ -13,7 +14,7 @@ class Program
         {
             Console.Title = "Server";
             Console.SetWindowPosition(0, 0);
-            Server server = new Server(33300);
+            Server server = new Server(Port);
             server.Open();
             i++;
 
@@ -55,8 +56,8 @@ class Program
             Console.Title = args[0];
             try
             {
-                Client client = new Client(args[0], (ushort)(33300 + int.Parse(args[1])));
-                client.ConnectToServer("127.0.0.1", 33300);
+                Client client = new Client(args[0], (ushort)(Port + int.Parse(args[1])));
+                client.ConnectToServer("127.0.0.1", Port);
                 while (true)
                 {
                     string? line = Console.ReadLine();
