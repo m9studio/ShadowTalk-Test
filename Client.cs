@@ -97,6 +97,8 @@ class Client
         Task.Run(() => ListenToPeer(peerName, peerSocket));
 
     }
+
+    //TODO Вывести в отдельный поток
     public bool SendMessage(string user, string text)
     {
         //Если есть соединение с данным пользователем, то отправляем сообщение
@@ -108,6 +110,7 @@ class Client
         //Иначе запрашиваем сервер, на соединение с пользователем
         else
         {
+            //TODO лочить _peers[user] пока не появится соединение
             _serverSocket.SendMessage($"connect {user} {_localPort}");
             //ждем подлючение от user, после чего отправляем сообщение
             for(int i = 0; i < 6000; i++)
