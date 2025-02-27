@@ -63,11 +63,20 @@ class Program
                     string? line = Console.ReadLine();
                     if (line == null) continue;
                     string[] command = line.Split(" ");
-                    if (command.Length == 2)
+                    if (command.Length > 1)
                     {
+                        string text = "";
+                        for(int j = 1; j < command.Length; j++)
+                        {
+                            text += command[j];
+                            if(j + 1 < command.Length)
+                            {
+                                text += ' ';
+                            }
+                        }
                         Task.Run(() =>
                         {
-                            if(!client.SendMessage(command[0], command[1]))
+                            if(!client.SendMessage(command[0], text))
                             {
                                 Core.Log("Не удалось отправить письмо для " + command[0]);
                             }

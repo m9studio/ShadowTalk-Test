@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using Newtonsoft.Json.Linq;
+using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices.JavaScript;
 using System.Xml.Linq;
 
 class Client
@@ -18,8 +20,14 @@ class Client
 
     public void ConnectToServer(string serverIp, ushort serverPort)
     {
+        JObject json = new JObject();
+        json["name"] = _name;
+        json["port"] = _localPort;
+        json["type"] = "register";
+
+
         _serverSocket.Connect(new IPEndPoint(IPAddress.Parse(serverIp), serverPort));
-        _serverSocket.SendMessage($"register {_name} {_localPort}");
+        _serverSocket.SendMessage(json.ToString());
 
         Task.Run(StartListeningAsyncServer); // Клиент начинает слушать входящие сообщения от сервера
         Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения от других пользователей
@@ -82,7 +90,7 @@ class Client
         {
             ex.ConsoleWriteLine();
         }
-        Core.Log($"{peerName} отключился [{peerSocket.RemoteEndPoint}]");
+        Core.Log($"{peerName} отключился");
         _peers.Remove(peerName);
     }
 
@@ -101,10 +109,14 @@ class Client
 
     public bool SendMessage(string user, string text)
     {
+        JObject json = new JObject();
+        json["text"] = text;
+
+
         //Если есть соединение с данным пользователем, то отправляем сообщение
         if (_peers.ContainsKey(user)) 
         {
-            _peers[user].SendMessage(text);
+            _peers[user].SendMessage(json.ToString());
             return true;
         }
         //Иначе запрашиваем сервер, на соединение с пользователем
