@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices.JavaScript;
-using System.Xml.Linq;
 
 class Client
 {
@@ -38,13 +36,25 @@ class Client
         {
             while (_serverSocket.Connected)
             {
-                string request = _serverSocket.GetMessage();
-                Core.Log("Server: " + request, ConsoleColor.DarkYellow);
-
-                string[] parts = request.Split(' ');
-                if(parts.Length == 4 && parts[0] == "connect")
+                JObject request = _serverSocket.GetMessageJSON();
+                Core.Log($"Server: {request}", ConsoleColor.DarkYellow);
+                if(request.IsType("connect"))
                 {
-                    ConnectToPeer(parts[2], ushort.Parse(parts[3]), parts[1]);
+                    string? name = request.GetString("name");
+                    string? port = request.GetString("port");
+                    string? ip = request.GetString("ip");
+                    if (name != null && port != null && ip != null)
+                    {
+                        ConnectToPeer(ip, ushort.Parse(port), name);
+                    }
+                    else
+                    {
+                        Core.Log($"Server: Неправильный запрос", ConsoleColor.DarkRed);
+                    }
+                }
+                else
+                {
+                    Core.Log($"Server: Неизвестный запрос", ConsoleColor.DarkRed);
                 }
             }
         }
@@ -69,11 +79,26 @@ class Client
 
     private async Task HandleIncomingConnectionAsync(Socket incomingClient)
     {
-        string peerName = incomingClient.GetMessage();
-        _peers[peerName] = incomingClient;
-        Core.Log($"{peerName} подключился", ConsoleColor.Yellow);
+        JObject request = incomingClient.GetMessageJSON();
+        Core.Log($"{request}", ConsoleColor.DarkYellow);
+        if (request.IsType("connect"))
+        {
+            string? name = request.GetString("name");
+            if(name != null)
+            {
+                _peers[name] = incomingClient;
+                Task.Run(() => ListenToPeer(name, incomingClient));
+            }
+            else
+            {
+                Core.Log("Неправильный запрос", ConsoleColor.DarkRed);
+            }
+        }
+        else
+        {
+            Core.Log("Неправильный тип запроса", ConsoleColor.DarkRed);
+        }
 
-        Task.Run(() => ListenToPeer(peerName, incomingClient));
     }
 
     private async Task ListenToPeer(string peerName, Socket peerSocket)
@@ -100,7 +125,12 @@ class Client
         Core.Log($"Подключаемся к {peerName}", ConsoleColor.Yellow);
         Socket peerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         peerSocket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
-        peerSocket.SendMessage(_name); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
+
+        JObject json = new JObject();
+        json["name"] = _name;
+        json["type"] = "connect";
+
+        peerSocket.SendMessage(json); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
         _peers[peerName] = peerSocket;
 
         Task.Run(() => ListenToPeer(peerName, peerSocket));
@@ -122,8 +152,13 @@ class Client
         //Иначе запрашиваем сервер, на соединение с пользователем
         else
         {
+            JObject jsonConnect = new JObject();
+            jsonConnect["type"] = "connect";
+            jsonConnect["user"] = user;
+            jsonConnect["port"] = _localPort.ToString();
+
             //TODO лочить _peers[user] пока не появится соединение
-            _serverSocket.SendMessage($"connect {user} {_localPort}");
+            _serverSocket.SendMessage(jsonConnect);
             //ждем подлючение от user, после чего отправляем сообщение
             for(int i = 0; i < 6000; i++)
             {

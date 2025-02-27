@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using Newtonsoft.Json.Linq;
+using System.Net.Sockets;
 using System.Text;
 
 public static class Core
@@ -28,10 +29,14 @@ public static class Core
             return Encoding.UTF8.GetString(ms.ToArray());
         }
     }
+    public static JObject GetMessageJSON(this Socket socket) => JObject.Parse(socket.GetMessage()); //new JObject(socket.GetMessage());
+
+
     public static void SendMessage(this Socket socket, string text)
     {
         socket.Send(Encoding.UTF8.GetBytes(text));
     }
+    public static void SendMessage(this Socket socket, JObject jObject) => socket.SendMessage(jObject.ToString());
 
     public static void ConsoleWriteLine(this Exception exception)
     {
@@ -47,4 +52,13 @@ public static class Core
     {
         Console.WriteLine(text);
     }
+
+
+
+
+    public static bool IsType(this JObject jObject, string type) => jObject.ContainsKey("type") && 
+                                                                    jObject["type"].Type == JTokenType.String &&
+                                                                    (string)jObject["type"] == type;
+    public static string? GetString(this JObject jObject, string key) => jObject.ContainsKey(key) &&
+                                                                         jObject[key].Type == JTokenType.String ? (string)jObject[key] : null;
 }
