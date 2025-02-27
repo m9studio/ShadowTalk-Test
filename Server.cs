@@ -63,7 +63,7 @@ class Server
                 }
                 else
                 {
-                    Console.WriteLine(name + ": " + request);
+                    Core.Log(name + ": " + request);
                 }
             }
         }
