@@ -69,7 +69,7 @@ class Program
                         {
                             if(!client.SendMessage(command[0], command[1]))
                             {
-                                Console.WriteLine("Не удалось отправить письмо для " + command[0]);
+                                Core.Log("Не удалось отправить письмо для " + command[0]);
                             }
                         });
                     }
@@ -81,7 +81,7 @@ class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                ex.ConsoleWriteLine();
                 Console.ReadLine();
             }
         }

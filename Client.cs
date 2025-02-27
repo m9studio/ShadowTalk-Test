@@ -31,9 +31,8 @@ class Client
             while (_serverSocket.Connected)
             {
                 string request = _serverSocket.GetMessage();
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.WriteLine("Server: " + request);
-                Console.ResetColor();
+                Core.Log("Server: " + request, ConsoleColor.DarkYellow);
+
                 string[] parts = request.Split(' ');
                 if(parts.Length == 4 && parts[0] == "connect")
                 {
@@ -64,9 +63,7 @@ class Client
     {
         string peerName = incomingClient.GetMessage();
         _peers[peerName] = incomingClient;
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine($"{peerName} подключился");
-        Console.ResetColor();
+        Core.Log($"{peerName} подключился", ConsoleColor.Yellow);
 
         Task.Run(() => ListenToPeer(peerName, incomingClient));
     }
@@ -78,25 +75,21 @@ class Client
             while (true)
             {
                 string message = peerSocket.GetMessage();
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"{peerName}: {message}");
-                Console.ResetColor();
+                Core.Log($"{peerName}: {message}", ConsoleColor.Green);
             }
         }
         catch (Exception ex)
         {
             ex.ConsoleWriteLine();
         }
-        Console.WriteLine($"{peerName} отключился [{peerSocket.RemoteEndPoint}]");
+        Core.Log($"{peerName} отключился [{peerSocket.RemoteEndPoint}]");
         _peers.Remove(peerName);
     }
 
 
     public void ConnectToPeer(string peerIp, ushort peerPort, string peerName)
     {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine($"Подключаемся к {peerName}");
-        Console.ResetColor();
+        Core.Log($"Подключаемся к {peerName}", ConsoleColor.Yellow);
         Socket peerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         peerSocket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
         peerSocket.SendMessage(_name); // Отправляем своё имя, чтобы другой клиент знал, кто подключился

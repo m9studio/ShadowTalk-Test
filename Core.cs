@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 using System.Text;
 
 public static class Core
@@ -35,8 +36,16 @@ public static class Core
 
     public static void ConsoleWriteLine(this Exception exception)
     {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"Ошибка: {exception.Message}\n{exception.StackTrace}");
+        Core.Log($"Ошибка: {exception.Message}\n{exception.StackTrace}", ConsoleColor.Red);
+    }
+    public static void Log(string text, ConsoleColor color)
+    {
+        Console.ForegroundColor = color;
+        Console.WriteLine(text);
         Console.ResetColor();
+    }
+    public static void Log(string text)
+    {
+        Console.WriteLine(text);
     }
 }

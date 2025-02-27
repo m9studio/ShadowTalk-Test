@@ -16,9 +16,7 @@ class Server
     public bool Open()
     {
         Task.Run(AcceptClientsAsync);
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("Сервер запущен...");
-        Console.ResetColor();
+        Core.Log("Сервер запущен...", ConsoleColor.Green);
         return true;
     }
 
@@ -31,9 +29,7 @@ class Server
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл
             //TODO может сделать отдельный метод для регистрации и уже от него выводить в HandleClientAsync?
             _ = Task.Run(() => HandleClientAsync(clientSocket));
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("new connect");
-            Console.ResetColor();
+            Core.Log("new connect", ConsoleColor.Green);
         }
     }
 
@@ -54,16 +50,12 @@ class Server
                 {
                     name = parts[1];
                     _clients[name] = clientSocket;
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"{name}: подключился [{clientSocket.RemoteEndPoint}]");
-                    Console.ResetColor();
+                    Core.Log($"{name}: подключился [{clientSocket.RemoteEndPoint}]", ConsoleColor.Green);
                 }
                 //Пользователь запрашивает подключение
                 else if (parts[0] == "connect")
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"{name}: пытается связаться с [{parts[1]}], его адресс [{remoteIpEndPoint.Address}:{parts[2]}]");
-                    Console.ResetColor();
+                    Core.Log($"{name}: пытается связаться с [{parts[1]}], его адресс [{remoteIpEndPoint.Address}:{parts[2]}]", ConsoleColor.Yellow);
                     if (_clients.ContainsKey(parts[1]))
                     {
                         _clients[parts[1]].SendMessage("connect " + name + " " + remoteIpEndPoint.Address + " " + parts[2]);
@@ -79,6 +71,6 @@ class Server
         {
             ex.ConsoleWriteLine();
         }
-        Console.WriteLine($"{name} отключился [{clientSocket.RemoteEndPoint}]");
+        Core.Log($"{name} отключился [{clientSocket.RemoteEndPoint}]");
     }
 }
