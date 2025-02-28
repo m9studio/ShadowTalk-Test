@@ -1,11 +1,47 @@
 ﻿using System.Net.Sockets;
 using System.Net;
 using Newtonsoft.Json.Linq;
+using System.Xml.Linq;
+using Struct;
 
 class Server
 {
+    private class ServerUser
+    {
+        public string Name;
+        public string UUID;
+        public Socket Socket;
+        public ushort Port;
+
+        public void LogError(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Red);
+        public void LogError(string text, JObject jObject) => LogError($"{text}\n{jObject}");
+        public void LogError(Exception exception) => LogError($"Ошибка: {exception.Message}\n{exception.StackTrace}");
+
+        public void LogSuccess(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Green);
+        public void LogSuccess(string text, JObject jObject) => LogSuccess($"{text}\n{jObject}");
+
+        public void LogWarn(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Yellow);
+        public void LogWarn(string text, JObject jObject) => LogWarn($"{text}\n{jObject}");
+
+
+
+        public void LogErrorA(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.DarkRed);
+        public void LogErrorA(string text, JObject jObject) => LogErrorA($"{text}\n{jObject}");
+        public void LogErrorA(Exception exception) => LogErrorA($"Ошибка: {exception.Message}\n{exception.StackTrace}");
+
+        public void LogSuccessA(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.DarkGreen);
+        public void LogSuccessA(string text, JObject jObject) => LogSuccessA($"{text}\n{jObject}");
+
+        public void LogWarnA(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.DarkYellow);
+        public void LogWarnA(string text, JObject jObject) => LogWarnA($"{text}\n{jObject}");
+    }
+    
+
+
+
+
     private Socket _serverSocket;
-    private Dictionary<string, Socket> _clients = new();
+    private Dictionary<string, ServerUser> _clients = new();
 
     public Server(ushort port)
     {
@@ -28,87 +64,69 @@ class Server
             //Ожидаем новое входящее подключение
             Socket clientSocket = await _serverSocket.AcceptAsync();
             //Генерируем UUID для отслеживания логов
-            string UUID = Guid.NewGuid().ToString();
+            ServerUser user = new ServerUser();
+            user.UUID = Guid.NewGuid().ToString();
 
-            Core.Log($"{UUID}: New connect [{clientSocket.RemoteEndPoint}]");
+            user.LogSuccessA("Новое подключение");
+
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл
-            _ = Task.Run(() => HandleClientAsync(clientSocket, UUID));
+            _ = Task.Run(() => HandleClientAsync(clientSocket, user));
         }
     }
 
-    private async Task HandleClientAsync(Socket clientSocket, string UUID)
+    private async Task HandleClientAsync(Socket clientSocket, ServerUser user)
     {
-        string? name = null;
+        user.Socket = clientSocket;
+
+
+
+        //string? name = null;
         IPEndPoint remoteIpEndPoint = clientSocket.RemoteEndPoint as IPEndPoint;
         IPEndPoint localIpEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
         try
         {
             JObject request = clientSocket.GetMessageJSON();
-            Core.Log($"{UUID}: {request}");
-            name = request.GetString("name");
-            if (request.IsType("register") && name != null)
+
+            ClientToServerRegister? register = ClientToServerRegister.Convert(request);
+            if(register == null)
             {
-                name = name.Trim();
-                if (_clients.ContainsKey(name) || string.IsNullOrEmpty(name))
-                {
-                    Core.Log($"{UUID}: Недопустимое имя", ConsoleColor.DarkRed);
-                    return;
-                }
-            }
-            else
-            {
-                Core.Log($"{UUID}: Неправильный запрос", ConsoleColor.DarkRed);
+                user.LogErrorA("Неправильный запрос", request);
                 return;
             }
-            _clients[name] = clientSocket;
-            Core.Log($"{UUID} [{name}]: Подключился", ConsoleColor.Green);
+            if (_clients.ContainsKey(register.Name))
+            {
+                user.LogErrorA("Недопустимое имя", request);
+                return;
+            }
+            user.Port = register.Port;
+            user.Name = register.Name;
+            _clients[user.Name] = user;
+            user.LogSuccessA("Прошел регистрацию", request);
 
 
             while (clientSocket.Connected)
             {
                 request = clientSocket.GetMessageJSON();
-                Core.Log($"{UUID} [{name}]: {request}");
-                if (request.IsType("connect"))
+                ClientToServerConnect? connect = ClientToServerConnect.Convert(request);
+                if (connect != null)
                 {
-                    string? userName = request.GetString("user");
-                    string? port = request.GetString("port");
-                    if (userName != null && port != null)
+                    if (_clients.ContainsKey(connect.Name))
                     {
-                        Core.Log($"{UUID} [{name}]: пытается связаться с [{userName}], его адресс [{remoteIpEndPoint.Address}:{port}]", ConsoleColor.Yellow);
-                        if (_clients.ContainsKey(userName))
-                        {
-                            JObject json = new JObject();
-                            json["type"] = "connect";
-                            json["name"] = userName;
-                            json["ip"] = remoteIpEndPoint.Address.ToString();
-                            json["port"] = port;
+                        user.LogSuccess("Хочет связаться с пользователем", request);
+                        _clients[connect.Name].Socket.SendMessage(new ServerToClientConnect(user.Name, user.Port, remoteIpEndPoint.Address.ToString(), connect.Key).ToString());
+                    }
+                    else user.LogWarn("Пытается связаться с неизвестным пользователем", request);
+                }
+                else user.LogWarn("Неизвестный или неправильный запрос", request);
 
-                            _clients[userName].SendMessage(json);
-                        }
-                    }
-                    else
-                    {
-                        Core.Log($"{UUID} [{name}]: Неправильный запрос", ConsoleColor.DarkRed);
-                    }
-                }
-                else
-                {
-                    Core.Log($"{UUID} [{name}]: Не известный запрос", ConsoleColor.DarkRed);
-                }
+
+
             }
+            user.LogError("Отключился");
         }
         catch (Exception ex)
         {
-            if(name != null)
-            {
-                Core.Log($"{UUID} [{name}]:", ConsoleColor.Red);
-            }
-            else
-            {
-                Core.Log($"{UUID}:", ConsoleColor.Red);
-            }
-            ex.ConsoleWriteLine();
+            user.LogError(ex);
         }
-        Core.Log($"{UUID} [{name}]: Отключился");
     }
 }

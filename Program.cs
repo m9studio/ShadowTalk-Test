@@ -4,12 +4,12 @@ class Program
 {
     //TODO добавить комментарии, чтобы не запутаться
     //TODO после успешных тестов, разделить на 2 проекта Server и Client
-    static void Main(string[] args)
+    /*static/* */void Main(string[] args)
     {
         ushort Port = 55500;
         int i = 0;
         Console.SetWindowSize(48, 30);
-        Console.SetBufferSize(48, 30);
+        Console.SetBufferSize(10000, 30);
         if (args.Length == 0)
         {
             Console.Title = "Server";
@@ -57,7 +57,7 @@ class Program
             try
             {
                 Client client = new Client(args[0], (ushort)(Port + int.Parse(args[1])));
-                client.ConnectToServer("127.0.0.1", Port);
+                client.Start("127.0.0.1", Port);
                 while (true)
                 {
                     string? line = Console.ReadLine();
