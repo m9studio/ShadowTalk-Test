@@ -16,6 +16,7 @@ public static class Core
 
     public static string GetMessage(this Socket socket)
     {
+        //TODO переработать, т.к. если клиент не успеет вовремя прочесть сообщение (не забываем про разные задержки), то 2 и более сообщений сольются
         using (MemoryStream ms = new MemoryStream())
         {
             byte[] buffer = new byte[1024];
@@ -29,7 +30,19 @@ public static class Core
             return Encoding.UTF8.GetString(ms.ToArray());
         }
     }
-    public static JObject GetMessageJSON(this Socket socket) => JObject.Parse(socket.GetMessage()); //new JObject(socket.GetMessage());
+    public static JObject GetMessageJSON(this Socket socket){
+        string json = socket.GetMessage();
+        try
+        {
+            return JObject.Parse(json);
+        }
+        catch (Exception ex)
+        {
+            ex.ConsoleWriteLine();
+            Core.Log(json, ConsoleColor.Red);
+        }
+        return new JObject();
+    }
 
 
     public static void SendMessage(this Socket socket, string text)

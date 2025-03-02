@@ -1,7 +1,6 @@
 ﻿using System.Net.Sockets;
 using System.Net;
 using Newtonsoft.Json.Linq;
-using System.Xml.Linq;
 using Struct;
 
 class Server
@@ -70,11 +69,11 @@ class Server
             user.LogSuccessA("Новое подключение");
 
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл
-            _ = Task.Run(() => HandleClientAsync(clientSocket, user));
+            _ = Task.Run(() => HandleClient(clientSocket, user));
         }
     }
 
-    private async Task HandleClientAsync(Socket clientSocket, ServerUser user)
+    private void HandleClient(Socket clientSocket, ServerUser user)
     {
         user.Socket = clientSocket;
 
@@ -85,10 +84,11 @@ class Server
         IPEndPoint localIpEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
         try
         {
+            //TODO ожидание минута
             JObject request = clientSocket.GetMessageJSON();
 
             ClientToServerRegister? register = ClientToServerRegister.Convert(request);
-            if(register == null)
+            if (register == null)
             {
                 user.LogErrorA("Неправильный запрос", request);
                 return;
@@ -118,9 +118,6 @@ class Server
                     else user.LogWarn("Пытается связаться с неизвестным пользователем", request);
                 }
                 else user.LogWarn("Неизвестный или неправильный запрос", request);
-
-
-
             }
             user.LogError("Отключился");
         }

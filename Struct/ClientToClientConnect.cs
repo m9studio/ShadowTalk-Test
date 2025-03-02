@@ -15,6 +15,19 @@ namespace Struct
         /// Ключ для верефикации, чтобы другой клиент нас распознал
         /// </summary>
         public string Key;
+        public ClientToClientConnect(string name, string key)
+        {
+            Name = name;
+            Key = key;
+        }
+        public override string ToString()
+        {
+            JObject data = new JObject();
+            data["type"] = "connect";
+            data["name"] = Name;
+            data["key"] = Key;
+            return data.ToString();
+        }
         public static ClientToClientConnect? Convert(JObject jObject)
         {
             if (IsType(jObject))
@@ -23,10 +36,7 @@ namespace Struct
                 string? key = jObject.GetString("key");
                 if (name != null && key != null)
                 {
-                    ClientToClientConnect item = new ClientToClientConnect();
-                    item.Name = name;
-                    item.Key = key;
-                    return item;
+                    return new ClientToClientConnect(name, key);
                 }
             }
             return null;

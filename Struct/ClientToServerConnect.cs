@@ -15,6 +15,19 @@ namespace Struct
         /// Ключ для верефикации, чтобы знать что подключается к нам именно запрашиваемый пользователь
         /// </summary>
         public string Key; //TODO может лучше ключ будет генерировать сервер?
+        public ClientToServerConnect(string name, string key)
+        {
+            Name = name;
+            Key = key;
+        }
+        public override string ToString()
+        {
+            JObject data = new JObject();
+            data["type"] = "connect";
+            data["name"] = Name;
+            data["key"] = Key;
+            return data.ToString();
+        }
         public static ClientToServerConnect? Convert(JObject jObject)
         {
             if (IsType(jObject))
@@ -23,10 +36,7 @@ namespace Struct
                 string? key = jObject.GetString("key");
                 if (name != null && key != null)
                 {
-                    ClientToServerConnect item = new ClientToServerConnect();
-                    item.Name = name;
-                    item.Key = key;
-                    return item;
+                    return new ClientToServerConnect(name, key);
                 }
             }
             return null;

@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
+using Struct;
 using System.Net;
 using System.Net.Sockets;
-using System.Xml.Linq;
 
 class Client
 {
@@ -9,85 +9,6 @@ class Client
     private string _name;
     private Dictionary<string, Socket> _peers = new();
     private ushort _localPort;
-
-    private class ClientConnect
-    {
-        public string Name;
-        public ushort Port;
-        public string IP;
-        public static ClientConnect? Check(JObject jObject)
-        {
-            if (!Is(jObject))
-                return null;
-
-            string? name = jObject.GetString("name");
-            ushort port = 0;
-            string? ip = jObject.GetString("ip");
-            if (name != null && ip != null &&
-                ushort.TryParse((string?)jObject["port"], out port))
-            {
-                ClientConnect item = new ClientConnect();
-                item.Name = name;
-                item.Port = port;
-                item.IP = ip;
-                return item;
-            }
-            return null;
-        }
-        public static bool Is(JObject jObject) => jObject.IsType("connect");
-    }
-    private class ClientConnect2
-    {
-        public string Name;
-        public static ClientConnect2? Check(JObject jObject)
-        {
-            if (!Is(jObject))
-                return null;
-
-            string? name = jObject.GetString("name");
-            ushort port = 0;
-            string? ip = jObject.GetString("ip");
-            if (name != null && ip != null &&
-                ushort.TryParse((string?)jObject["port"], out port))
-            {
-                ClientConnect2 item = new ClientConnect2();
-                item.Name = name;
-                return item;
-            }
-            return null;
-        }
-        public static bool Is(JObject jObject) => jObject.IsType("connect2");
-    }
-    private class ClientMessage
-    {
-        public string Text;
-        public static ClientMessage? Check(JObject jObject)
-        {
-            if (!Is(jObject))
-                return null;
-
-            string? text = jObject.GetString("text");
-            if (text != null)
-            {
-                ClientMessage item = new ClientMessage();
-                item.Text = text;
-                return item;
-            }
-            return null;
-        }
-        public static bool Is(JObject jObject) => jObject.IsType("message");
-    }
-
-
-
-
-
-
-
-
-
-
-
 
     public Client(string name, ushort port)
     {
@@ -98,30 +19,28 @@ class Client
 
     public void Start(string serverIp, ushort serverPort)
     {
-        JObject json = new JObject();
-        json["name"] = _name;
-        json["port"] = _localPort;
-        json["type"] = "register";
-
         _serverSocket.Connect(new IPEndPoint(IPAddress.Parse(serverIp), serverPort));
-        _serverSocket.SendMessage(json.ToString());
+        _serverSocket.SendMessage(new ClientToServerRegister(_name, _localPort).ToString());
 
-        Task.Run(ListenServer); // Клиент начинает слушать входящие сообщения от сервера
-        Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения от других пользователей
+        _ = Task.Run(ListenServer); // Клиент начинает слушать входящие сообщения от сервера
+        _ = Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения от других пользователей
     }
-
-    private async Task ListenServer()
+    /// <summary>
+    /// Прослушиваем сервер
+    /// </summary>
+    /// <returns></returns>
+    private void ListenServer()
     {
         try
         {
             while (_serverSocket.Connected)
             {
                 JObject request = _serverSocket.GetMessageJSON();
-                ClientConnect? connect = ClientConnect.Check(request);
+                ServerToClientConnect? connect = ServerToClientConnect.Convert(request);
                 if (connect != null)
                 {
                     Core.Log($"Server: Запрос на подключение\n{request}", ConsoleColor.DarkYellow);
-                    ConnectToPeer(connect.IP, connect.Port, connect.Name);
+                    _ = Task.Run(() => ConnectToPeer(connect.IP, connect.Port, connect.Name, connect.Key));
                 }
                 else
                 {
@@ -134,23 +53,29 @@ class Client
             ex.ConsoleWriteLine();
         }
     }
-    public void ConnectToPeer(string peerIp, ushort peerPort, string peerName)
+    /// <summary>
+    /// Подключаемся к другому пользователю
+    /// </summary>
+    /// <param name="peerIp"></param>
+    /// <param name="peerPort"></param>
+    /// <param name="peerName"></param>
+    /// <param name="peerKey"></param>
+    /// <returns></returns>
+    public void ConnectToPeer(string peerIp, ushort peerPort, string peerName, string peerKey)
     {
         Core.Log($"Подключаемся к {peerName}", ConsoleColor.Yellow);
         Socket peerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         peerSocket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
 
-        JObject json = new JObject();
-        json["name"] = _name;
-        json["type"] = "connect2";
-
-        peerSocket.SendMessage(json); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
+        peerSocket.SendMessage(new ClientToClientConnect(_name, "").ToString()); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
         _peers[peerName] = peerSocket;
 
-        Task.Run(() => ListenToPeer(peerName, peerSocket));
-
+        ListenToPeer(peerName, peerSocket);
     }
-
+    /// <summary>
+    /// Ожидаем подключение других пользователей
+    /// </summary>
+    /// <returns></returns>
     private async Task StartListeningAsync()
     {
         Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -160,42 +85,51 @@ class Client
         while (true)
         {
             Socket incomingClient = await listener.AcceptAsync();
-            Task.Run(() => HandleIncomingConnectionAsync(incomingClient));
+            _ = Task.Run(() => HandleIncomingConnection(incomingClient));
         }
     }
-
-    private async Task HandleIncomingConnectionAsync(Socket incomingClient)
+    /// <summary>
+    /// Верефикация другого пользователя
+    /// </summary>
+    /// <param name="incomingClient"></param>
+    /// <returns></returns>
+    private void HandleIncomingConnection(Socket incomingClient)
     {
         JObject request = incomingClient.GetMessageJSON();
         Core.Log($"{request}", ConsoleColor.DarkYellow);
-        if (request.IsType("connect"))
+        ClientToClientConnect? connect = ClientToClientConnect.Convert(request);
+        if (connect != null)
         {
-            string? name = request.GetString("name");
-            if(name != null)
-            {
-                _peers[name] = incomingClient;
-                Task.Run(() => ListenToPeer(name, incomingClient));
-            }
-            else
-            {
-                Core.Log("Неправильный запрос", ConsoleColor.DarkRed);
-            }
+            _peers[connect.Name] = incomingClient;
+            ListenToPeer(connect.Name, incomingClient);
         }
         else
         {
             Core.Log("Неправильный тип запроса", ConsoleColor.DarkRed);
         }
-
     }
-
-    private async Task ListenToPeer(string peerName, Socket peerSocket)
+    /// <summary>
+    /// Прослушка другого пользователя
+    /// </summary>
+    /// <param name="peerName"></param>
+    /// <param name="peerSocket"></param>
+    /// <returns></returns>
+    private void ListenToPeer(string peerName, Socket peerSocket)
     {
         try
         {
             while (true)
             {
-                string message = peerSocket.GetMessage();
-                Core.Log($"{peerName}: {message}", ConsoleColor.Green);
+                JObject request = peerSocket.GetMessageJSON();
+                ClientToClientMessage? message = ClientToClientMessage.Convert(request);
+                if (message != null)
+                {
+                    Core.Log($"{peerName}: {message.Text}", ConsoleColor.Green);
+                }
+                else
+                {
+                    Core.Log($"{peerName}: Неизвестный запрос:{request}", ConsoleColor.DarkRed);
+                }
             }
         }
         catch (Exception ex)
@@ -209,35 +143,29 @@ class Client
 
 
 
+
     public bool SendMessage(string user, string text)
     {
-        JObject json = new JObject();
-        json["type"] = "message";
-        json["text"] = text;
-
+        ClientToClientMessage message = new ClientToClientMessage(text);
 
         //Если есть соединение с данным пользователем, то отправляем сообщение
         if (_peers.ContainsKey(user)) 
         {
-            _peers[user].SendMessage(json.ToString());
+            _peers[user].SendMessage(message.ToString());
             return true;
         }
         //Иначе запрашиваем сервер, на соединение с пользователем
         else
         {
-            JObject jsonConnect = new JObject();
-            jsonConnect["type"] = "connect";
-            jsonConnect["name"] = user;
-
-            //TODO лочить _peers[user] пока не появится соединение
-            _serverSocket.SendMessage(jsonConnect);
+            //TODO лочить _peers[user] пока не появится соединение так-же учесть верефикацию через key
+            _serverSocket.SendMessage(new ClientToServerConnect(user, "").ToString());
             //ждем подлючение от user, после чего отправляем сообщение
-            for(int i = 0; i < 6000; i++)
+            for (int i = 0; i < 6000; i++)
             {
                 Thread.Sleep(10);//10 * 6 (6000 / 1000) = 60 сек на ожидание подключение
                 if(_peers.ContainsKey(user))
                 {
-                    _peers[user].SendMessage(text);
+                    _peers[user].SendMessage(message.ToString());
                     return true;
                 }
             }

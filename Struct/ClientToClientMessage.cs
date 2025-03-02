@@ -8,6 +8,17 @@ namespace Struct
     public class ClientToClientMessage
     {
         public string Text;
+        public ClientToClientMessage(string text)
+        {
+            Text = text;
+        }
+        public override string ToString()
+        {
+            JObject data = new JObject();
+            data["type"] = "message";
+            data["text"] = Text;
+            return data.ToString();
+        }
         public static ClientToClientMessage? Convert(JObject jObject)
         {
             if (IsType(jObject))
@@ -15,9 +26,7 @@ namespace Struct
                 string? text = jObject.GetString("text");
                 if (text != null)
                 {
-                    ClientToClientMessage item = new ClientToClientMessage();
-                    item.Text = text;
-                    return item;
+                    return new ClientToClientMessage(text);
                 }
             }
             return null;
