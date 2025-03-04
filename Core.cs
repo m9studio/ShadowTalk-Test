@@ -51,11 +51,12 @@ public static class Core
         }
         return new JObject();
     }
-    public static void SendMessage(this Socket socket, string text)
+    public static void SendMessage(this Socket socket, string text) => socket.SendMessage(Encoding.UTF8.GetBytes(text));
+    public static void SendMessage(this Socket socket, byte[] data)
     {
-        byte[] data = Encoding.UTF8.GetBytes(text);
-        byte[] size = BitConverter.GetBytes((uint)data.Length);
+        //LATER шифровать data
 
+        byte[] size = BitConverter.GetBytes((uint)data.Length);
         if (BitConverter.IsLittleEndian)
             Array.Reverse(size); // Преобразуем в Big Endian, если используется Little Endian
 
