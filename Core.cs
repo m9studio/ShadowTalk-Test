@@ -4,9 +4,7 @@ using System.Text;
 
 public static class Core
 {
-
-
-
+    //TODO передавать кол-во следующих байт в первом байте сообщения чтобы разделять по ним
     public static T[] SubArray<T>(this T[] array, int offset, int length)
     {
         T[] result = new T[length];
