@@ -4,7 +4,6 @@ using System.Text;
 
 public static class Core
 {
-    //TODO передавать кол-во следующих байт в первом байте сообщения чтобы разделять по ним
     public static T[] SubArray<T>(this T[] array, int offset, int length)
     {
         T[] result = new T[length];
@@ -14,19 +13,30 @@ public static class Core
 
     public static string GetMessage(this Socket socket)
     {
-        //TODO переработать, т.к. если клиент не успеет вовремя прочесть сообщение (не забываем про разные задержки), то 2 и более сообщений сольются
-        using (MemoryStream ms = new MemoryStream())
-        {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
+        byte[] sizeBuffer = new byte[4];
+        int received = socket.Receive(sizeBuffer);
+        if (received != 4)
+            throw new Exception("Не удалось получить размер сообщения");
 
-            while ((bytesRead = socket.Receive(buffer)) > 0)
-            {
-                ms.Write(buffer, 0, bytesRead);
-                if (bytesRead < 1024) break; // Если получили меньше 1024 байт, выходим из цикла
-            }
-            return Encoding.UTF8.GetString(ms.ToArray());
+        // Преобразуем размер из Big Endian (Network Byte Order) в UInt32
+        uint size = (uint)(sizeBuffer[0] << 24 |
+                           sizeBuffer[1] << 16 |
+                           sizeBuffer[2] << 8 |
+                           sizeBuffer[3]);
+
+        byte[] buffer = new byte[size];
+        int totalReceived = 0;
+
+        while (totalReceived < size)
+        {
+            int bytes = socket.Receive(buffer, totalReceived, (int)size - totalReceived, SocketFlags.None);
+            if (bytes == 0) // Если соединение закрылось
+                throw new Exception("Соединение было закрыто");
+
+            totalReceived += bytes;
         }
+
+        return Encoding.UTF8.GetString(buffer);
     }
     public static JObject GetMessageJSON(this Socket socket){
         string json = socket.GetMessage();
@@ -41,11 +51,17 @@ public static class Core
         }
         return new JObject();
     }
-
-
     public static void SendMessage(this Socket socket, string text)
     {
-        socket.Send(Encoding.UTF8.GetBytes(text));
+        byte[] data = Encoding.UTF8.GetBytes(text);
+        byte[] size = BitConverter.GetBytes((uint)data.Length);
+
+        if (BitConverter.IsLittleEndian)
+            Array.Reverse(size); // Преобразуем в Big Endian, если используется Little Endian
+
+        //TODO объеденить в 1 сообщение
+        socket.Send(size);  // Отправляем размер
+        socket.Send(data);  // Отправляем само сообщение
     }
     public static void SendMessage(this Socket socket, JObject jObject) => socket.SendMessage(jObject.ToString());
 
