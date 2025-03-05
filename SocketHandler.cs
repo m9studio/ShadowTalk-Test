@@ -27,6 +27,7 @@ public class SocketHandler
     public void Connect(IPAddress address, int port) => socket.Connect(new IPEndPoint(address, port));
     public void Connect(string address, int port) => socket.Connect(IPAddress.Parse(address), port);
 
+    public void Bind(EndPoint localEP) => socket.Bind(localEP);
 
 
     public void Send(byte[] bytes)

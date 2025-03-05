@@ -85,7 +85,12 @@ class Program
                     {
                         if (command[0] == "log")
                         {
-                            client.Log(command[1]);
+                            Task.Run(() => client.Log(command[1]));
+                            continue;
+                        }
+                        if (command[0] == "udp")
+                        {
+                            Task.Run(() => client.UdpOpen(command[1]));
                             continue;
                         }
 

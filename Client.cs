@@ -122,9 +122,22 @@ class Client
             {
                 JObject request = peerSocket.GetJObject();
                 ClientToClientMessage? message = ClientToClientMessage.Convert(request);
+                ClientToClientUDP? udp = ClientToClientUDP.Convert(request);
                 if (message != null)
                 {
                     Core.Log($"{peerName}: {message.Text}", ConsoleColor.Green);
+                }
+                else if(udp != null)
+                {
+                    Core.Log($"{peerName} udp {udp.Port}", ConsoleColor.Green);
+                    //TODO подключиться к сокету
+                    Task.Run(() =>
+                    {
+                        SocketHandler socket = new SocketHandler(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        socket.Connect((peerSocket.Socket.RemoteEndPoint as IPEndPoint).Address, udp.Port);
+                        _ = Task.Run(() => UdpSender(socket, peerName));
+                        _ = Task.Run(() => UdpGetter(socket, peerName));
+                    });
                 }
                 else
                 {
@@ -139,9 +152,6 @@ class Client
         Core.Log($"{peerName} отключился");
         _peers.Remove(peerName);
     }
-
-
-
 
 
     public bool SendMessage(string user, string text)
@@ -172,6 +182,83 @@ class Client
             return false;
         }
     }
+    public void UdpOpen(string user)
+    {
+        SocketHandler socket = new SocketHandler(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+        ClientToClientUDP udp = new ClientToClientUDP(((IPEndPoint)socket.Socket.LocalEndPoint).Port);
+
+        if (_peers.ContainsKey(user))
+        {
+            _peers[user].Send(udp);
+        }
+        else
+        {
+            //TODO лочить _peers[user] пока не появится соединение так-же учесть верефикацию через key
+            _serverSocket.Send(new ClientToServerConnect(user, ""));
+            //ждем подлючение от user, после чего отправляем сообщение
+            for (int i = 0; i < 6000; i++)
+            {
+                Thread.Sleep(10);//10 * 6 (6000 / 1000) = 60 сек на ожидание подключение
+                if (_peers.ContainsKey(user))
+                {
+                    _peers[user].Send(udp);
+                    break;
+                }
+            }
+        }
+
+        if (_peers.ContainsKey(user))
+        {
+            _ = Task.Run(() => UdpSender(socket, user));
+            _ = Task.Run(() => UdpGetter(socket, user));
+        }
+        else
+        {
+            socket.Socket.Close();
+        }
+    }
+
+    private void UdpSender(SocketHandler socket, string user)
+    {
+        try
+        {
+            while (socket.Connected)
+            {
+                Thread.Sleep(750);
+                byte[] bytes = GenerateRandomBytes();
+                socket.Send(bytes);
+                Core.Log("Send " + user + ": " + BitConverter.ToString(bytes).Replace("-", ""), ConsoleColor.Magenta);
+                }
+            }
+        catch (Exception ex)
+        {
+            ex.ConsoleWriteLine();
+        }
+    }
+    private void UdpGetter(SocketHandler socket, string user)
+    {
+        try
+        {
+            while (socket.Connected)
+            {
+                byte[] bytes = socket.GetBytes();
+                Core.Log("Get " + user + ": " + BitConverter.ToString(bytes).Replace("-", ""), ConsoleColor.Magenta);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.ConsoleWriteLine();
+        }
+    }
+
+    public static byte[] GenerateRandomBytes(int length = 12)
+    {
+        byte[] bytes = new byte[length];
+        Random random = new Random();
+        random.NextBytes(bytes);
+        return bytes;
+    }
 
     public void Log(string user)
     {
@@ -185,4 +272,7 @@ class Client
     {
         _serverSocket.Log();
     }
+
+
+
 }
