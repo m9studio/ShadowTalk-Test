@@ -5,7 +5,7 @@ namespace Struct
     /// <summary>
     /// Сообщение от клиента к серверу, с просьбой чтобы к нам подключился пользователь
     /// </summary>
-    public class ClientToServerConnect
+    public class ClientToServerConnect : StructData
     {
         /// <summary>
         /// Имя пользователя, с кем клиент хочет общаться
@@ -20,20 +20,20 @@ namespace Struct
             Name = name;
             Key = key;
         }
-        public override string ToString()
+        public override JObject ToJObject()
         {
             JObject data = new JObject();
             data["type"] = "connect";
             data["name"] = Name;
             data["key"] = Key;
-            return data.ToString();
+            return data;
         }
         public static ClientToServerConnect? Convert(JObject jObject)
         {
-            if (IsType(jObject))
+            if (IsType(jObject, "connect"))
             {
-                string? name = jObject.GetString("name");
-                string? key = jObject.GetString("key");
+                string? name = GetString(jObject, "name");
+                string? key = GetString(jObject, "key");
                 if (name != null && key != null)
                 {
                     return new ClientToServerConnect(name, key);
@@ -41,6 +41,5 @@ namespace Struct
             }
             return null;
         }
-        public static bool IsType(JObject jObject) => jObject.IsType("connect");
     }
 }

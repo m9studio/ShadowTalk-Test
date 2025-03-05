@@ -26,11 +26,4 @@ public static class Core
     {
         Console.WriteLine(text);
     }
-
-
-    public static bool IsType(this JObject jObject, string type) => jObject.ContainsKey("type") && 
-                                                                    jObject["type"].Type == JTokenType.String &&
-                                                                    (string)jObject["type"] == type;
-    public static string? GetString(this JObject jObject, string key) => jObject.ContainsKey(key) &&
-                                                                         jObject[key].Type == JTokenType.String ? (string)jObject[key] : null;
 }

@@ -61,7 +61,7 @@ class Client
     /// <param name="peerName"></param>
     /// <param name="peerKey"></param>
     /// <returns></returns>
-    public void ConnectToPeer(string peerIp, ushort peerPort, string peerName, string peerKey)
+    public void ConnectToPeer(string peerIp, int peerPort, string peerName, string peerKey)
     {
         Core.Log($"Подключаемся к {peerName}", ConsoleColor.Yellow);
         SocketHandler peerSocket = new SocketHandler(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));

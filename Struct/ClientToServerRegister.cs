@@ -5,7 +5,7 @@ namespace Struct
     /// <summary>
     /// Сообщение от клиента к серверу, с информацией для регистрации
     /// </summary>
-    public class ClientToServerRegister
+    public class ClientToServerRegister : StructData
     {
         /// <summary>
         /// Наше имя
@@ -14,34 +14,33 @@ namespace Struct
         /// <summary>
         /// Порт для входящих подключений
         /// </summary>
-        public ushort Port;
-        public ClientToServerRegister(string name, ushort port)
+        public int Port;
+        public ClientToServerRegister(string name, int port)
         {
             Name = name;
             Port = port;
         }
-        public override string ToString()
+        public override JObject ToJObject()
         {
             JObject data = new JObject();
             data["type"] = "register";
             data["name"] = Name;
             data["port"] = Port;
-            return data.ToString();
+            return data;
         }
         public static ClientToServerRegister? Convert(JObject jObject)
         {
-            if (IsType(jObject))
+            if (IsType(jObject, "register"))
             {
-                string? name = jObject.GetString("name");
-                ushort port = 0;
+                string? name = GetString(jObject, "name");
+                int port = GetPort(jObject);
 
-                if (name != null && ushort.TryParse((string?)jObject["port"], out port))
+                if (name != null && 0 <= port)
                 {
                     return new ClientToServerRegister(name, port);
                 }
             }
             return null;
         }
-        public static bool IsType(JObject jObject) => jObject.IsType("register");
     }
 }

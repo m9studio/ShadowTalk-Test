@@ -10,7 +10,7 @@ class Server
         public string Name;
         public string UUID;
         public SocketHandler Socket;
-        public ushort Port;
+        public int Port;
 
         public void LogError(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Red);
         public void LogError(string text, JObject jObject) => LogError($"{text}\n{jObject}");

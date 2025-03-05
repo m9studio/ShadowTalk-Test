@@ -5,25 +5,25 @@ namespace Struct
     /// <summary>
     /// Обычное сообщение от клиента к клиенту
     /// </summary>
-    public class ClientToClientMessage
+    public class ClientToClientMessage : StructData
     {
         public string Text;
         public ClientToClientMessage(string text)
         {
             Text = text;
         }
-        public override string ToString()
+        public override JObject ToJObject()
         {
             JObject data = new JObject();
             data["type"] = "message";
             data["text"] = Text;
-            return data.ToString();
+            return data;
         }
         public static ClientToClientMessage? Convert(JObject jObject)
         {
-            if (IsType(jObject))
+            if (IsType(jObject, "message"))
             {
-                string? text = jObject.GetString("text");
+                string? text = GetString(jObject, "text");
                 if (text != null)
                 {
                     return new ClientToClientMessage(text);
@@ -31,6 +31,5 @@ namespace Struct
             }
             return null;
         }
-        public static bool IsType(JObject jObject) => jObject.IsType("message");
     }
 }

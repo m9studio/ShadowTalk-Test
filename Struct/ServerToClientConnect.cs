@@ -5,7 +5,7 @@ namespace Struct
     /// <summary>
     /// Сообщение от сервера к клиенту с информацией о том, к какому пользователю нужно подключиться
     /// </summary>
-    public class ServerToClientConnect
+    public class ServerToClientConnect : StructData
     {
         /// <summary>
         /// Имя пользователя который хочет общаться с клиентом
@@ -14,7 +14,7 @@ namespace Struct
         /// <summary>
         /// Порт пользователя который хочет общаться
         /// </summary>
-        public ushort Port;
+        public int Port;
         /// <summary>
         /// IP адресс пользователя который хочет общаться
         /// </summary>
@@ -23,14 +23,14 @@ namespace Struct
         /// Ключ для верефикации у пользователя
         /// </summary>
         public string Key;
-        public ServerToClientConnect(string name, ushort port, string iP, string key)
+        public ServerToClientConnect(string name, int port, string iP, string key)
         {
             Name = name;
             Port = port;
             IP = iP;
             Key = key;
         }
-        public override string ToString()
+        public override JObject ToJObject()
         {
             JObject data = new JObject();
             data["type"] = "connect";
@@ -38,23 +38,22 @@ namespace Struct
             data["port"] = Port;
             data["ip"] = IP;
             data["key"] = Key;
-            return data.ToString();
+            return data;
         }
         public static ServerToClientConnect? Convert(JObject jObject)
         {
-            if (IsType(jObject))
+            if (IsType(jObject, "connect"))
             {
-                string? name = jObject.GetString("name");
-                ushort port = 0;
-                string? ip = jObject.GetString("ip");
-                string? key = jObject.GetString("key");
-                if (name != null && ip != null && key != null && ushort.TryParse((string?)jObject["port"], out port))
+                string? name = GetString(jObject, "name");
+                int port = GetPort(jObject);
+                string? ip = GetString(jObject, "ip");
+                string? key = GetString(jObject, "key");
+                if (name != null && ip != null && key != null && 0 <= port)
                 {
                     return new ServerToClientConnect(name, port, ip, key);
                 }
             }
             return null;
         }
-        public static bool IsType(JObject jObject) => jObject.IsType("connect");
     }
 }
