@@ -33,7 +33,7 @@ public class SocketHandler
     }
     public void Send(string text) => Send(Encoding.UTF8.GetBytes(text));
     public void Send(JObject data) => Send(data.ToString());
-
+    public void Send(StructData data) => Send(data.ToString());
 
     public byte[] GetBytes()
     {

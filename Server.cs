@@ -113,7 +113,7 @@ class Server
                     if (_clients.ContainsKey(connect.Name))
                     {
                         user.LogSuccess("Хочет связаться с пользователем", request);
-                        _clients[connect.Name].Socket.Send(new ServerToClientConnect(user.Name, user.Port, remoteIpEndPoint.Address.ToString(), connect.Key).ToString());
+                        _clients[connect.Name].Socket.Send(new ServerToClientConnect(user.Name, user.Port, remoteIpEndPoint.Address.ToString(), connect.Key));
                     }
                     else user.LogWarn("Пытается связаться с неизвестным пользователем", request);
                 }

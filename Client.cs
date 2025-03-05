@@ -20,7 +20,7 @@ class Client
     public void Start(string serverIp, ushort serverPort)
     {
         _serverSocket.Connect(serverIp, serverPort);
-        _serverSocket.Send(new ClientToServerRegister(_name, _localPort).ToString());
+        _serverSocket.Send(new ClientToServerRegister(_name, _localPort));
 
         _ = Task.Run(ListenServer); // Клиент начинает слушать входящие сообщения от сервера
         _ = Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения от других пользователей
@@ -67,7 +67,7 @@ class Client
         SocketHandler peerSocket = new SocketHandler(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
         peerSocket.Socket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
 
-        peerSocket.Send(new ClientToClientConnect(_name, "").ToString()); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
+        peerSocket.Send(new ClientToClientConnect(_name, "")); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
         _peers[peerName] = peerSocket;
 
         ListenToPeer(peerName, peerSocket);
@@ -151,21 +151,21 @@ class Client
         //Если есть соединение с данным пользователем, то отправляем сообщение
         if (_peers.ContainsKey(user)) 
         {
-            _peers[user].Send(message.ToString());
+            _peers[user].Send(message);
             return true;
         }
         //Иначе запрашиваем сервер, на соединение с пользователем
         else
         {
             //TODO лочить _peers[user] пока не появится соединение так-же учесть верефикацию через key
-            _serverSocket.Send(new ClientToServerConnect(user, "").ToString());
+            _serverSocket.Send(new ClientToServerConnect(user, ""));
             //ждем подлючение от user, после чего отправляем сообщение
             for (int i = 0; i < 6000; i++)
             {
                 Thread.Sleep(10);//10 * 6 (6000 / 1000) = 60 сек на ожидание подключение
                 if(_peers.ContainsKey(user))
                 {
-                    _peers[user].Send(message.ToString());
+                    _peers[user].Send(message);
                     return true;
                 }
             }
