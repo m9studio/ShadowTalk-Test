@@ -5,22 +5,22 @@ using System.Net.Sockets;
 
 class Client
 {
-    private Socket _serverSocket;
+    private SocketHandler _serverSocket;
     private string _name;
-    private Dictionary<string, Socket> _peers = new();
+    private Dictionary<string, SocketHandler> _peers = new();
     private ushort _localPort;
 
     public Client(string name, ushort port)
     {
         _name = name;
         _localPort = port;
-        _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        _serverSocket = new SocketHandler(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
     }
 
     public void Start(string serverIp, ushort serverPort)
     {
-        _serverSocket.Connect(new IPEndPoint(IPAddress.Parse(serverIp), serverPort));
-        _serverSocket.SendMessage(new ClientToServerRegister(_name, _localPort).ToString());
+        _serverSocket.Connect(serverIp, serverPort);
+        _serverSocket.Send(new ClientToServerRegister(_name, _localPort).ToString());
 
         _ = Task.Run(ListenServer); // Клиент начинает слушать входящие сообщения от сервера
         _ = Task.Run(StartListeningAsync); // Клиент начинает слушать входящие соединения от других пользователей
@@ -35,7 +35,7 @@ class Client
         {
             while (_serverSocket.Connected)
             {
-                JObject request = _serverSocket.GetMessageJSON();
+                JObject request = _serverSocket.GetJObject();
                 ServerToClientConnect? connect = ServerToClientConnect.Convert(request);
                 if (connect != null)
                 {
@@ -64,10 +64,10 @@ class Client
     public void ConnectToPeer(string peerIp, ushort peerPort, string peerName, string peerKey)
     {
         Core.Log($"Подключаемся к {peerName}", ConsoleColor.Yellow);
-        Socket peerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        peerSocket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
+        SocketHandler peerSocket = new SocketHandler(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
+        peerSocket.Socket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
 
-        peerSocket.SendMessage(new ClientToClientConnect(_name, "").ToString()); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
+        peerSocket.Send(new ClientToClientConnect(_name, "").ToString()); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
         _peers[peerName] = peerSocket;
 
         ListenToPeer(peerName, peerSocket);
@@ -85,7 +85,7 @@ class Client
         while (true)
         {
             Socket incomingClient = await listener.AcceptAsync();
-            _ = Task.Run(() => HandleIncomingConnection(incomingClient));
+            _ = Task.Run(() => HandleIncomingConnection(new SocketHandler(incomingClient)));
         }
     }
     /// <summary>
@@ -93,9 +93,9 @@ class Client
     /// </summary>
     /// <param name="incomingClient"></param>
     /// <returns></returns>
-    private void HandleIncomingConnection(Socket incomingClient)
+    private void HandleIncomingConnection(SocketHandler incomingClient)
     {
-        JObject request = incomingClient.GetMessageJSON();
+        JObject request = incomingClient.GetJObject();
         Core.Log($"{request}", ConsoleColor.DarkYellow);
         ClientToClientConnect? connect = ClientToClientConnect.Convert(request);
         if (connect != null)
@@ -114,13 +114,13 @@ class Client
     /// <param name="peerName"></param>
     /// <param name="peerSocket"></param>
     /// <returns></returns>
-    private void ListenToPeer(string peerName, Socket peerSocket)
+    private void ListenToPeer(string peerName, SocketHandler peerSocket)
     {
         try
         {
             while (true)
             {
-                JObject request = peerSocket.GetMessageJSON();
+                JObject request = peerSocket.GetJObject();
                 ClientToClientMessage? message = ClientToClientMessage.Convert(request);
                 if (message != null)
                 {
@@ -151,21 +151,21 @@ class Client
         //Если есть соединение с данным пользователем, то отправляем сообщение
         if (_peers.ContainsKey(user)) 
         {
-            _peers[user].SendMessage(message.ToString());
+            _peers[user].Send(message.ToString());
             return true;
         }
         //Иначе запрашиваем сервер, на соединение с пользователем
         else
         {
             //TODO лочить _peers[user] пока не появится соединение так-же учесть верефикацию через key
-            _serverSocket.SendMessage(new ClientToServerConnect(user, "").ToString());
+            _serverSocket.Send(new ClientToServerConnect(user, "").ToString());
             //ждем подлючение от user, после чего отправляем сообщение
             for (int i = 0; i < 6000; i++)
             {
                 Thread.Sleep(10);//10 * 6 (6000 / 1000) = 60 сек на ожидание подключение
                 if(_peers.ContainsKey(user))
                 {
-                    _peers[user].SendMessage(message.ToString());
+                    _peers[user].Send(message.ToString());
                     return true;
                 }
             }

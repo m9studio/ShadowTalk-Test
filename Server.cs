@@ -9,7 +9,7 @@ class Server
     {
         public string Name;
         public string UUID;
-        public Socket Socket;
+        public SocketHandler Socket;
         public ushort Port;
 
         public void LogError(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Red);
@@ -69,23 +69,23 @@ class Server
             user.LogSuccessA("Новое подключение");
 
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл
-            _ = Task.Run(() => HandleClient(clientSocket, user));
+            _ = Task.Run(() => HandleClient(new SocketHandler(clientSocket), user));
         }
     }
 
-    private void HandleClient(Socket clientSocket, ServerUser user)
+    private void HandleClient(SocketHandler clientSocket, ServerUser user)
     {
         user.Socket = clientSocket;
 
 
 
         //string? name = null;
-        IPEndPoint remoteIpEndPoint = clientSocket.RemoteEndPoint as IPEndPoint;
-        IPEndPoint localIpEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
+        IPEndPoint remoteIpEndPoint = clientSocket.Socket.RemoteEndPoint as IPEndPoint;
+        //IPEndPoint localIpEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
         try
         {
             //TODO ожидание минута
-            JObject request = clientSocket.GetMessageJSON();
+            JObject request = clientSocket.GetJObject();
 
             ClientToServerRegister? register = ClientToServerRegister.Convert(request);
             if (register == null)
@@ -106,14 +106,14 @@ class Server
 
             while (clientSocket.Connected)
             {
-                request = clientSocket.GetMessageJSON();
+                request = clientSocket.GetJObject();
                 ClientToServerConnect? connect = ClientToServerConnect.Convert(request);
                 if (connect != null)
                 {
                     if (_clients.ContainsKey(connect.Name))
                     {
                         user.LogSuccess("Хочет связаться с пользователем", request);
-                        _clients[connect.Name].Socket.SendMessage(new ServerToClientConnect(user.Name, user.Port, remoteIpEndPoint.Address.ToString(), connect.Key).ToString());
+                        _clients[connect.Name].Socket.Send(new ServerToClientConnect(user.Name, user.Port, remoteIpEndPoint.Address.ToString(), connect.Key).ToString());
                     }
                     else user.LogWarn("Пытается связаться с неизвестным пользователем", request);
                 }
