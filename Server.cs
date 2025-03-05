@@ -126,4 +126,12 @@ class Server
             user.LogError(ex);
         }
     }
+
+    public void Log(string user)
+    {
+        if (_clients.ContainsKey(user))
+        {
+            _clients[user].Socket.Log();
+        }
+    }
 }

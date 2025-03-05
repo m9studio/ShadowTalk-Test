@@ -22,8 +22,26 @@ class Program
             while (true)
             {
                 string? line = Console.ReadLine();
+                
                 if (line != null && line.Length > 1)
                 {
+                    string[] a = line.Split(' ');
+                    if(a.Length > 1)
+                    {
+                        if (a[0] == "log")
+                        {
+                            server.Log(a[1]);
+                        }
+                        continue;
+                    }
+                    if(line == "log")
+                    {
+                        continue;
+                    }
+
+
+
+
                     string clientName = line;
                     //ushort clientPort = (ushort)(33300 + i);
 
@@ -65,6 +83,15 @@ class Program
                     string[] command = line.Split(" ");
                     if (command.Length > 1)
                     {
+                        if (command[0] == "log")
+                        {
+                            client.Log(command[1]);
+                            continue;
+                        }
+
+
+
+
                         string text = "";
                         for(int j = 1; j < command.Length; j++)
                         {
@@ -82,9 +109,10 @@ class Program
                             }
                         });
                     }
-                    else if (command.Length == 1 && command[0] == "stop")
+                    else if (command.Length == 1)
                     {
-                        break;
+                        if (command[0] == "stop") break;
+                        if (command[0] == "log") client.Log();
                     }
                 }
             }

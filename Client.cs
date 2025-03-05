@@ -172,4 +172,17 @@ class Client
             return false;
         }
     }
+
+    public void Log(string user)
+    {
+        if (_peers.ContainsKey(user))
+        {
+            _peers[user].Log();
+            
+        }
+    }
+    public void Log()
+    {
+        _serverSocket.Log();
+    }
 }
