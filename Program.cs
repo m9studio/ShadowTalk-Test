@@ -4,9 +4,9 @@ class Program
 {
     //TODO добавить комментарии, чтобы не запутаться
     //TODO после успешных тестов, разделить на 2 проекта Server и Client
-    static/* */void Main(string[] args)
+    static void Main(string[] args)
     {
-        ushort Port = 55500;
+        /*ushort Port = 55500;
         int i = 0;
         Console.SetWindowSize(36, 30);
         Console.SetBufferSize(36, 10000);
@@ -126,6 +126,9 @@ class Program
                 ex.ConsoleWriteLine();
                 Console.ReadLine();
             }
-        }
+        }*/
+    
+    
+        
     }
 }
