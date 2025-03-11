@@ -127,16 +127,17 @@ class Client
                 {
                     Core.Log($"{peerName}: {message.Text}", ConsoleColor.Green);
                 }
-                else if(udp != null)
+                else if (udp != null)
                 {
                     Core.Log($"{peerName} udp {udp.Port}", ConsoleColor.Green);
                     //TODO подключиться к сокету
                     Task.Run(() =>
                     {
-                        SocketHandler socket = new SocketHandler(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        socket.Connect((peerSocket.Socket.RemoteEndPoint as IPEndPoint).Address, udp.Port);
-                        _ = Task.Run(() => UdpSender(socket, peerName));
-                        _ = Task.Run(() => UdpGetter(socket, peerName));
+                        if (socketUdp == null)
+                            socketUdp = new UdpSocketHandler();
+                        UdpOpen(peerName);
+                        socketUdp.Connect(new IPEndPoint((peerSocket.Socket.RemoteEndPoint as IPEndPoint).Address, udp.Port));
+                        _ = Task.Run(() => UdpSender(socketUdp, peerName));
                     });
                 }
                 else
@@ -159,7 +160,7 @@ class Client
         ClientToClientMessage message = new ClientToClientMessage(text);
 
         //Если есть соединение с данным пользователем, то отправляем сообщение
-        if (_peers.ContainsKey(user)) 
+        if (_peers.ContainsKey(user))
         {
             _peers[user].Send(message);
             return true;
@@ -173,7 +174,7 @@ class Client
             for (int i = 0; i < 6000; i++)
             {
                 Thread.Sleep(10);//10 * 6 (6000 / 1000) = 60 сек на ожидание подключение
-                if(_peers.ContainsKey(user))
+                if (_peers.ContainsKey(user))
                 {
                     _peers[user].Send(message);
                     return true;
@@ -182,11 +183,19 @@ class Client
             return false;
         }
     }
+
+    UdpSocketHandler socketUdp = null;
+    bool Udp = false;
     public void UdpOpen(string user)
     {
-        SocketHandler socket = new SocketHandler(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        socket.Bind(new IPEndPoint(IPAddress.Any, 0));
-        ClientToClientUDP udp = new ClientToClientUDP(((IPEndPoint)socket.Socket.LocalEndPoint).Port);
+        if (Udp)
+        {
+            return;
+        }
+        Udp = true;
+        if (socketUdp == null)
+            socketUdp = new UdpSocketHandler();
+        ClientToClientUDP udp = new ClientToClientUDP(socketUdp.Port);
 
         if (_peers.ContainsKey(user))
         {
@@ -208,41 +217,44 @@ class Client
             }
         }
 
+
+
         if (_peers.ContainsKey(user))
         {
-            _ = Task.Run(() => UdpSender(socket, user));
-            _ = Task.Run(() => UdpGetter(socket, user));
+            _ = Task.Run(() => UdpGetter(socketUdp, user));
         }
         else
         {
-            socket.Socket.Close();
+            socketUdp.Close();
         }
     }
 
-    private void UdpSender(SocketHandler socket, string user)
+    private void UdpSender(UdpSocketHandler socket, string user)
     {
         try
         {
+            while (!socket.Connected) ;
             while (socket.Connected)
             {
                 Thread.Sleep(750);
                 byte[] bytes = GenerateRandomBytes();
                 socket.Send(bytes);
                 Core.Log("Send " + user + ": " + BitConverter.ToString(bytes).Replace("-", ""), ConsoleColor.Magenta);
-                }
             }
+        }
         catch (Exception ex)
         {
             ex.ConsoleWriteLine();
         }
     }
-    private void UdpGetter(SocketHandler socket, string user)
+    private void UdpGetter(UdpSocketHandler socket, string user)
     {
         try
         {
+            while (!socket.Connected) ;
             while (socket.Connected)
             {
-                byte[] bytes = socket.GetBytes();
+                byte[] bytes = socket.Get();
                 Core.Log("Get " + user + ": " + BitConverter.ToString(bytes).Replace("-", ""), ConsoleColor.Magenta);
             }
         }
@@ -251,6 +263,9 @@ class Client
             ex.ConsoleWriteLine();
         }
     }
+
+
+
 
     public static byte[] GenerateRandomBytes(int length = 12)
     {
@@ -265,14 +280,11 @@ class Client
         if (_peers.ContainsKey(user))
         {
             _peers[user].Log();
-            
+
         }
     }
     public void Log()
     {
         _serverSocket.Log();
     }
-
-
-
 }
