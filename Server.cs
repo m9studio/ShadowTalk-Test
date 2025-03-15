@@ -11,48 +11,53 @@ class Server
         public string UUID;
         public SocketHandler Socket;
         public int Port;
+        public Logger Logger;
 
-        public void LogError(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Red);
+        public void LogError(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.Red*/);
         public void LogError(string text, JObject jObject) => LogError($"{text}\n{jObject}");
         public void LogError(Exception exception) => LogError($"Ошибка: {exception.Message}\n{exception.StackTrace}");
 
-        public void LogSuccess(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Green);
+        public void LogSuccess(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.Green*/);
         public void LogSuccess(string text, JObject jObject) => LogSuccess($"{text}\n{jObject}");
 
-        public void LogWarn(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.Yellow);
+        public void LogWarn(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.Yellow*/);
         public void LogWarn(string text, JObject jObject) => LogWarn($"{text}\n{jObject}");
 
 
 
-        public void LogErrorA(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.DarkRed);
+        public void LogErrorA(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.DarkRed*/);
         public void LogErrorA(string text, JObject jObject) => LogErrorA($"{text}\n{jObject}");
         public void LogErrorA(Exception exception) => LogErrorA($"Ошибка: {exception.Message}\n{exception.StackTrace}");
 
-        public void LogSuccessA(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.DarkGreen);
+        public void LogSuccessA(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.DarkGreen*/);
         public void LogSuccessA(string text, JObject jObject) => LogSuccessA($"{text}\n{jObject}");
 
-        public void LogWarnA(string text) => Core.Log($"{UUID} [{Name}]: {text}", ConsoleColor.DarkYellow);
+        public void LogWarnA(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.DarkYellow*/);
         public void LogWarnA(string text, JObject jObject) => LogWarnA($"{text}\n{jObject}");
     }
-    
 
 
+    private Logger logger;
 
 
-    private Socket _serverSocket;
+    private Socket _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
     private Dictionary<string, ServerUser> _clients = new();
 
-    public Server(ushort port)
+    public Server(Logger logger)
     {
-        _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
-        _serverSocket.Listen(10);
+        this.logger = logger;
+    }
+    public Server(Logger logger, ushort port):this(logger)
+    {
+        Open(port);
     }
 
-    public bool Open()
+    public bool Open(ushort port)
     {
+        _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+        _serverSocket.Listen(10);
         Task.Run(AcceptClientsAsync);
-        Core.Log("Сервер запущен...", ConsoleColor.Green);
+        logger.Log("Сервер запущен..."/*, ConsoleColor.Green*/);
         return true;
     }
 
@@ -65,7 +70,7 @@ class Server
             //Генерируем UUID для отслеживания логов
             ServerUser user = new ServerUser();
             user.UUID = Guid.NewGuid().ToString();
-
+            user.Logger = logger;
             user.LogSuccessA("Новое подключение");
 
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл

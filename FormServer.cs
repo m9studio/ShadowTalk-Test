@@ -1,23 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-public partial class FormServer : Form
+﻿public partial class FormServer : Form
 {
-    Server server;
-    public FormServer()
-    {
-        InitializeComponent();
-        server = new Server(Core.ServerPort);
-        server.Logger = new FormServerLogger(listBoxLog);
-        server.Open();
-    }
     private class FormServerLogger : Logger
     {
         private ListBox listBox;
@@ -32,5 +14,22 @@ public partial class FormServer : Form
                 listBox.Items.Add(text);
             }));
         }
+    }
+    Server server;
+    public FormServer()
+    {
+        InitializeComponent();
+        server = new Server(new FormServerLogger(listBoxLog));
+        Shown += OpenServer;//TODO правильно ли?
+    }
+
+    private void OpenServer(object? sender, EventArgs? e)
+    {
+        server.Open(Core.ServerPort);
+    }
+
+    private void btnOpenClient_Click(object sender, EventArgs e)
+    {
+        new FormClient();
     }
 }

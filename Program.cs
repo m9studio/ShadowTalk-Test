@@ -6,6 +6,10 @@ class Program
     //TODO после успешных тестов, разделить на 2 проекта Server и Client
     static void Main(string[] args)
     {
+        ApplicationConfiguration.Initialize();
+        Application.Run(new FormServer());
+
+
         /*ushort Port = 55500;
         int i = 0;
         Console.SetWindowSize(36, 30);
@@ -127,8 +131,8 @@ class Program
                 Console.ReadLine();
             }
         }*/
-    
-    
-        
+
+
+
     }
 }

@@ -8,16 +8,16 @@ class Client
     private SocketHandler _serverSocket;
     private string _name;
     private Dictionary<string, SocketHandler> _peers = new();
-    private ushort _localPort;
+    private int _localPort;
 
-    public Client(string name, ushort port)
+    public Client(string name, int port)
     {
         _name = name;
         _localPort = port;
         _serverSocket = new SocketHandler(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
     }
 
-    public void Start(string serverIp, ushort serverPort)
+    public void Start(string serverIp, int serverPort)
     {
         _serverSocket.Connect(serverIp, serverPort);
         _serverSocket.Send(new ClientToServerRegister(_name, _localPort));
