@@ -1,4 +1,6 @@
-﻿partial class FormServer
+﻿using System.Windows.Forms;
+
+partial class FormServer
 {
     /// <summary>
     /// Required designer variable.
@@ -20,6 +22,7 @@
 
     #region Windows Form Designer generated code
 
+
     /// <summary>
     /// Required method for Designer support - do not modify
     /// the contents of this method with the code editor.
@@ -34,11 +37,13 @@
         // 
         listBoxLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         listBoxLog.FormattingEnabled = true;
+        listBoxLog.HorizontalScrollbar = true;
         listBoxLog.ItemHeight = 15;
         listBoxLog.Location = new Point(10, 40);
         listBoxLog.Margin = new Padding(0);
         listBoxLog.Name = "listBoxLog";
-        listBoxLog.Size = new Size(480, 244);
+        listBoxLog.SelectionMode = SelectionMode.None;
+        listBoxLog.Size = new Size(223, 94);
         listBoxLog.TabIndex = 3;
         // 
         // btnOpenClient
@@ -55,10 +60,9 @@
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(500, 300);
+        ClientSize = new Size(284, 261);
         Controls.Add(listBoxLog);
         Controls.Add(btnOpenClient);
-        MinimumSize = new Size(500, 300);
         Name = "FormServer";
         Text = "Server";
         ResumeLayout(false);

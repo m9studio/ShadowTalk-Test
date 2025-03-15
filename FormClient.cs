@@ -12,6 +12,7 @@
         }
         client = new Client(name, Core.NewClientPort());
         Shown += Connect;//TODO правильно ли?
+        Text = name;
         Show();
     }
 

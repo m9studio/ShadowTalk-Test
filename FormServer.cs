@@ -11,7 +11,10 @@
         {
             listBox.Invoke(new Action(() =>
             {
-                listBox.Items.Add(text);
+                foreach(string line in text.Split('\n'))
+                {
+                    listBox.Items.Add(line);
+                }
             }));
         }
     }
@@ -19,6 +22,10 @@
     public FormServer()
     {
         InitializeComponent();
+        MinimumSize = new Size(500, 300);
+        ClientSize = new Size(500, 300);
+        listBoxLog.Size = new Size(480, 250);
+
         server = new Server(new FormServerLogger(listBoxLog));
         Shown += OpenServer;//TODO правильно ли?
     }
