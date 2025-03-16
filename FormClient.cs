@@ -13,6 +13,12 @@
         client = new Client(name, Core.NewClientPort());
         Shown += Connect;//TODO правильно ли?
         Text = name;
+        AddLeftBorder(LogPanel);
+        AddBottomBorder(UsersTextBox);
+
+        AddBottomBorder(ChatLabel);
+        AddBottomBorder(ChatListBox);
+
         Show();
     }
 
@@ -38,5 +44,56 @@
         prompt.Controls.Add(confirmation);
         prompt.AcceptButton = confirmation;
         return prompt.ShowDialog(this) == DialogResult.OK ? textBox.Text : null;
+    }
+    public void AddBottomBorder(Control control, Color color = default, int thickness = 1)
+    {
+        if (color == default) color = Color.Black;
+        Panel border = new Panel
+        {
+            Height = thickness,
+            Dock = DockStyle.Bottom,
+            BackColor = color
+        };
+        control.Controls.Add(border);
+        border.BringToFront();
+    }
+
+    public void AddTopBorder(Control control, Color color = default, int thickness = 1)
+    {
+        if (color == default) color = Color.Black;
+        Panel border = new Panel
+        {
+            Height = thickness,
+            Dock = DockStyle.Top,
+            BackColor = color
+        };
+        control.Controls.Add(border);
+        border.BringToFront();
+    }
+
+    public void AddLeftBorder(Control control, Color color = default, int thickness = 1)
+    {
+        if (color == default) color = Color.Black;
+        Panel border = new Panel
+        {
+            Width = thickness,
+            Dock = DockStyle.Left,
+            BackColor = color
+        };
+        control.Controls.Add(border);
+        border.BringToFront();
+    }
+
+    public void AddRightBorder(Control control, Color color = default, int thickness = 1)
+    {
+        if (color == default) color = Color.Black;
+        Panel border = new Panel
+        {
+            Width = thickness,
+            Dock = DockStyle.Right,
+            BackColor = color
+        };
+        control.Controls.Add(border);
+        border.BringToFront();
     }
 }
