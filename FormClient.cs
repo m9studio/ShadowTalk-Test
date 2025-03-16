@@ -1,15 +1,20 @@
-﻿public partial class FormClient : Form
+﻿using System.Xml.Linq;
+
+public partial class FormClient : Form
 {
     Client client = null;
     public FormClient()
     {
         InitializeComponent();
         string? name = ShowDialog("Введите имя");
-        if(name == null)
+        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(name.Trim()))
         {
             Close();
             return;
         }
+        name = name.Trim();
+
+
         client = new Client(name, Core.NewClientPort());
         Shown += Connect;//TODO правильно ли?
         Text = name;
@@ -57,7 +62,6 @@
         control.Controls.Add(border);
         border.BringToFront();
     }
-
     public void AddTopBorder(Control control, Color color = default, int thickness = 1)
     {
         if (color == default) color = Color.Black;
@@ -70,7 +74,6 @@
         control.Controls.Add(border);
         border.BringToFront();
     }
-
     public void AddLeftBorder(Control control, Color color = default, int thickness = 1)
     {
         if (color == default) color = Color.Black;
@@ -83,7 +86,6 @@
         control.Controls.Add(border);
         border.BringToFront();
     }
-
     public void AddRightBorder(Control control, Color color = default, int thickness = 1)
     {
         if (color == default) color = Color.Black;
@@ -95,5 +97,23 @@
         };
         control.Controls.Add(border);
         border.BringToFront();
+    }
+
+
+
+
+    private void ChatTextBox_TextChanged(object sender, EventArgs e)
+    {
+        ChatButton.Enabled = !(string.IsNullOrEmpty(ChatTextBox.Text) || 
+                               string.IsNullOrEmpty(ChatTextBox.Text.Trim()));
+    }
+    private void ChatButton_Click(object sender, EventArgs e)
+    {
+        //TODO отправка сообщения
+    }
+
+    private void UsersTextBox_TextChanged(object sender, EventArgs e)
+    {
+        //TODO изменям UsersListBox.Items по client и UsersTextBox.Text
     }
 }

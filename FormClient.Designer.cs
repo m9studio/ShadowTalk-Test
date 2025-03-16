@@ -117,6 +117,7 @@
         UsersTextBox.PlaceholderText = "User Name";
         UsersTextBox.Size = new Size(150, 16);
         UsersTextBox.TabIndex = 0;
+        UsersTextBox.TextChanged += UsersTextBox_TextChanged;
         // 
         // ChatListBox
         // 
@@ -172,6 +173,7 @@
         ChatTextBox.ScrollBars = ScrollBars.Vertical;
         ChatTextBox.Size = new Size(308, 75);
         ChatTextBox.TabIndex = 0;
+        ChatTextBox.TextChanged += ChatTextBox_TextChanged;
         // 
         // ChatPanelButton
         // 
@@ -186,12 +188,14 @@
         // ChatButton
         // 
         ChatButton.Dock = DockStyle.Top;
+        ChatButton.Enabled = false;
         ChatButton.Location = new Point(0, 0);
         ChatButton.Name = "ChatButton";
         ChatButton.Size = new Size(75, 23);
         ChatButton.TabIndex = 0;
         ChatButton.Text = "Отправить";
         ChatButton.UseVisualStyleBackColor = true;
+        ChatButton.Click += ChatButton_Click;
         // 
         // FormClient
         // 
