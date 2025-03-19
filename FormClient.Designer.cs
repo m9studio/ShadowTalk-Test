@@ -106,6 +106,7 @@
         UsersListBox.Name = "UsersListBox";
         UsersListBox.Size = new Size(150, 445);
         UsersListBox.TabIndex = 1;
+        UsersListBox.SelectedIndexChanged += UsersListBox_SelectedIndexChanged;
         // 
         // UsersTextBox
         // 
@@ -207,6 +208,7 @@
         MinimumSize = new Size(600, 250);
         Name = "FormClient";
         Text = "Client";
+        KeyDown += Form_KeyDown;
         LogPanel.ResumeLayout(false);
         splitContainer.Panel1.ResumeLayout(false);
         splitContainer.Panel1.PerformLayout();

@@ -24,6 +24,10 @@ public partial class FormClient : Form
         AddBottomBorder(ChatLabel);
         AddBottomBorder(ChatListBox);
 
+        UsersTextBox_TextChanged(null, null);
+
+        ChatHide();
+        KeyPreview = true;
         Show();
     }
 
@@ -104,7 +108,7 @@ public partial class FormClient : Form
 
     private void ChatTextBox_TextChanged(object sender, EventArgs e)
     {
-        ChatButton.Enabled = !(string.IsNullOrEmpty(ChatTextBox.Text) || 
+        ChatButton.Enabled = !(string.IsNullOrEmpty(ChatTextBox.Text) ||
                                string.IsNullOrEmpty(ChatTextBox.Text.Trim()));
     }
     private void ChatButton_Click(object sender, EventArgs e)
@@ -112,8 +116,91 @@ public partial class FormClient : Form
         //TODO отправка сообщения
     }
 
-    private void UsersTextBox_TextChanged(object sender, EventArgs e)
+    /// <summary>
+    /// Временный список
+    /// </summary>
+    List<string> users = new List<string>()
     {
-        //TODO изменям UsersListBox.Items по client и UsersTextBox.Text
+        "ars",
+        "arsen",
+        "clu",
+        "gru",
+        "io",
+        "tor",
+        "torpeda",
+        "tron",
+        "zed",
+        "vi",
+        "vicktor",
+        "vicktoria"
+    };
+
+    private void UsersTextBox_TextChanged(object? sender, EventArgs? e)
+    {
+        //TODO может переделать  UsersListBox.Items.Add  под свой объект?
+        UsersListBox.Items.Clear();
+        string startName = UsersTextBox.Text;
+        if (string.IsNullOrEmpty(startName) || string.IsNullOrEmpty(startName.Trim()))
+        {
+            startName = "";
+        }
+        startName = startName.Trim().ToLower();
+
+        foreach (string user in users)
+        {
+            if (user.StartsWith(startName))
+            {
+                UsersListBox.Items.Add(user);
+            }
+        }
+
+        if (startName != "" && !users.Contains(startName))
+        {
+            UsersListBox.Items.Add(startName + " (new chat)");
+        }
+    }
+
+    private void ChatHide()
+    {
+        //TODO доделать
+        LogListBox.Items.Clear();
+        ChatListBox.Items.Clear();
+        ChatTextBox.Text = "";
+        ChatTextBox.Enabled = false;
+        ChatLabel.Text = "";
+    }
+    private void ChatShow(string user)
+    {
+        //TODO доделать
+        LogListBox.Items.Clear();
+        ChatListBox.Items.Clear();
+        ChatTextBox.Text = "";
+        ChatTextBox.Enabled = true;
+        ChatLabel.Text = user;
+    }
+
+    private void UsersListBox_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (UsersListBox.SelectedItem != null)
+        {
+            string item = (string)UsersListBox.SelectedItem;
+            if (users.Contains(item)){
+                //TODO загружаем чат
+                ChatShow(item);
+            }
+            else
+            {
+                //TODO просто открываем для начала чата
+                ChatShow(UsersTextBox.Text);
+            }
+        }
+    }
+
+    private void Form_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.Escape)
+        {
+            ChatHide();
+        }
     }
 }
