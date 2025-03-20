@@ -1,8 +1,8 @@
-﻿internal class LoggerListBox : Logger
+﻿internal class LoggerServer : Logger
 {
     private ListBox listBox;
     private string uuid;
-    public LoggerListBox(ListBox listBox, string uuid)
+    public LoggerServer(ListBox listBox, string uuid)
     {
         this.listBox = listBox;
         this.uuid = uuid;
@@ -22,8 +22,8 @@
     {
         listBox.Invoke(new Action(listBox.Items.Clear));
     }
-    public LoggerListBox Clone()
+    public LoggerServer Clone()
     {
-        return new LoggerListBox(listBox, Guid.NewGuid().ToString());
+        return new LoggerServer(listBox, Guid.NewGuid().ToString());
     }
 }

@@ -3,7 +3,7 @@
 public partial class FormClient : Form
 {
     Client client = null;
-    LoggerClientListBox logger;
+    LoggerClient logger;
     public FormClient()
     {
         InitializeComponent();
@@ -15,7 +15,7 @@ public partial class FormClient : Form
         }
         name = name.Trim();
 
-        logger = new LoggerClientListBox(LogListBox, ChatListBox);
+        logger = new LoggerClient(LogListBox, ChatListBox);
         client = new Client(name, Core.NewClientPort(), logger);
 
         Shown += Connect;//TODO правильно ли?

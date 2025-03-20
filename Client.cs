@@ -9,9 +9,9 @@ class Client
     private string _name;
     private Dictionary<string, SocketHandler> _peers = new();
     private int _localPort;
-    LoggerClientListBox logger;
+    LoggerClient logger;
 
-    public Client(string name, int port, LoggerClientListBox logger)
+    public Client(string name, int port, LoggerClient logger)
     {
         _name = name;
         this.logger = logger;
@@ -65,7 +65,7 @@ class Client
     /// <returns></returns>
     public void ConnectToPeer(string peerIp, int peerPort, string peerName, string peerKey)
     {
-        LoggerClientListBox logs = logger.Clone();
+        LoggerClient logs = logger.Clone();
         logger.Log($"Подключаемся к {peerName}"/*, ConsoleColor.Yellow*/);
         SocketHandler peerSocket = new SocketHandler(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), logs);
         peerSocket.Socket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
@@ -88,7 +88,7 @@ class Client
         while (true)
         {
             Socket incomingClient = await listener.AcceptAsync();
-            LoggerClientListBox logs = logger.Clone();
+            LoggerClient logs = logger.Clone();
             _ = Task.Run(() => HandleIncomingConnection(new SocketHandler(incomingClient, logs), logs));
         }
     }
@@ -97,7 +97,7 @@ class Client
     /// </summary>
     /// <param name="incomingClient"></param>
     /// <returns></returns>
-    private void HandleIncomingConnection(SocketHandler incomingClient, LoggerClientListBox logs)
+    private void HandleIncomingConnection(SocketHandler incomingClient, LoggerClient logs)
     {
         JObject request = incomingClient.GetJObject();
         logs.Log($"{request}"/*, ConsoleColor.DarkYellow*/);
@@ -118,7 +118,7 @@ class Client
     /// <param name="peerName"></param>
     /// <param name="peerSocket"></param>
     /// <returns></returns>
-    private void ListenToPeer(string peerName, SocketHandler peerSocket, LoggerClientListBox logs)
+    private void ListenToPeer(string peerName, SocketHandler peerSocket, LoggerClient logs)
     {
         try
         {
@@ -168,7 +168,7 @@ class Client
         if (_peers.ContainsKey(user))
         {
             _peers[user].Send(message);
-            ((LoggerClientListBox)_peers[user].Logger).Message("", text);
+            ((LoggerClient)_peers[user].Logger).Message("", text);
             return true;
         }
         //Иначе запрашиваем сервер, на соединение с пользователем
@@ -176,7 +176,7 @@ class Client
         {
             //TODO лочить _peers[user] пока не появится соединение так-же учесть верефикацию через key
             _serverSocket.Send(new ClientToServerConnect(user, ""));
-            ((LoggerClientListBox)_peers[user].Logger).Message("", text);
+            ((LoggerClient)_peers[user].Logger).Message("", text);
             //ждем подлючение от user, после чего отправляем сообщение
             for (int i = 0; i < 6000; i++)
             {

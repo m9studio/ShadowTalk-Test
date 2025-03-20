@@ -46,7 +46,7 @@ class Server
             Socket clientSocket = await _serverSocket.AcceptAsync();
             //Генерируем UUID для отслеживания логов
             ServerUser user = new ServerUser();
-            user.Logger = ((LoggerListBox)logger).Clone();
+            user.Logger = ((LoggerServer)logger).Clone();
             user.Logger.Log("Новое подключение");
 
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл

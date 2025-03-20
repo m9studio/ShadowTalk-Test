@@ -1,6 +1,6 @@
-﻿internal class LoggerClientListBox : Logger
+﻿internal class LoggerClient : Logger
 {
-    public LoggerClientListBox(ListBox socket, ListBox message)
+    public LoggerClient(ListBox socket, ListBox message)
     {
         this.socket = socket;
         this.message = message;
@@ -81,8 +81,8 @@
             }
         }));
     }
-    public LoggerClientListBox Clone()
+    public LoggerClient Clone()
     {
-        return new LoggerClientListBox(socket, message);
+        return new LoggerClient(socket, message);
     }
 }
