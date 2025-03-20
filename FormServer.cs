@@ -8,7 +8,7 @@
         ClientSize = new Size(500, 300);
         listBoxLog.Size = new Size(480, 250);
 
-        server = new Server(new LoggerListBox(listBoxLog));
+        server = new Server(new LoggerListBox(listBoxLog, ""));
         Shown += OpenServer;//TODO правильно ли?
     }
 

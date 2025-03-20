@@ -1,7 +1,4 @@
-﻿using System.Windows.Forms;
-using static System.Net.Mime.MediaTypeNames;
-
-internal class LoggerClientListBox : Logger
+﻿internal class LoggerClientListBox : Logger
 {
     public LoggerClientListBox(ListBox socket, ListBox message)
     {
@@ -58,6 +55,7 @@ internal class LoggerClientListBox : Logger
     }
     public override void Log(string text)
     {
+        text = text.Replace("\n", "\n\t");
         _socket.Add(text);
         if (action)
         {
@@ -82,5 +80,9 @@ internal class LoggerClientListBox : Logger
                 message.Items.Add(line);
             }
         }));
+    }
+    public LoggerClientListBox Clone()
+    {
+        return new LoggerClientListBox(socket, message);
     }
 }

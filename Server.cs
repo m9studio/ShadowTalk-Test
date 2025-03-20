@@ -8,32 +8,9 @@ class Server
     private class ServerUser
     {
         public string Name;
-        public string UUID;
         public SocketHandler Socket;
         public int Port;
         public Logger Logger;
-
-        public void LogError(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.Red*/);
-        public void LogError(string text, JObject jObject) => LogError($"{text}\n{jObject}");
-        public void LogError(Exception exception) => LogError($"Ошибка: {exception.Message}\n{exception.StackTrace}");
-
-        public void LogSuccess(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.Green*/);
-        public void LogSuccess(string text, JObject jObject) => LogSuccess($"{text}\n{jObject}");
-
-        public void LogWarn(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.Yellow*/);
-        public void LogWarn(string text, JObject jObject) => LogWarn($"{text}\n{jObject}");
-
-
-
-        public void LogErrorA(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.DarkRed*/);
-        public void LogErrorA(string text, JObject jObject) => LogErrorA($"{text}\n{jObject}");
-        public void LogErrorA(Exception exception) => LogErrorA($"Ошибка: {exception.Message}\n{exception.StackTrace}");
-
-        public void LogSuccessA(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.DarkGreen*/);
-        public void LogSuccessA(string text, JObject jObject) => LogSuccessA($"{text}\n{jObject}");
-
-        public void LogWarnA(string text) => Logger.Log($"{UUID} [{Name}]: {text}"/*, ConsoleColor.DarkYellow*/);
-        public void LogWarnA(string text, JObject jObject) => LogWarnA($"{text}\n{jObject}");
     }
 
 
@@ -69,12 +46,11 @@ class Server
             Socket clientSocket = await _serverSocket.AcceptAsync();
             //Генерируем UUID для отслеживания логов
             ServerUser user = new ServerUser();
-            user.UUID = Guid.NewGuid().ToString();
-            user.Logger = logger;
-            user.LogSuccessA("Новое подключение");
+            user.Logger = ((LoggerListBox)logger).Clone();
+            user.Logger.Log("Новое подключение");
 
             //Выводим прослушку сокета в отдельный поток, чтобы не лочить данный цикл
-            _ = Task.Run(() => HandleClient(new SocketHandler(clientSocket), user));
+            _ = Task.Run(() => HandleClient(new SocketHandler(clientSocket, user.Logger), user));
         }
     }
 
@@ -95,18 +71,18 @@ class Server
             ClientToServerRegister? register = ClientToServerRegister.Convert(request);
             if (register == null)
             {
-                user.LogErrorA("Неправильный запрос", request);
+                user.Logger.Log("Неправильный запрос");
                 return;
             }
             if (_clients.ContainsKey(register.Name))
             {
-                user.LogErrorA("Недопустимое имя", request);
+                user.Logger.Log("Недопустимое имя");
                 return;
             }
             user.Port = register.Port;
             user.Name = register.Name;
             _clients[user.Name] = user;
-            user.LogSuccessA("Прошел регистрацию", request);
+            user.Logger.Log("Прошел регистрацию");
 
 
             while (clientSocket.Connected)
@@ -117,26 +93,18 @@ class Server
                 {
                     if (_clients.ContainsKey(connect.Name))
                     {
-                        user.LogSuccess("Хочет связаться с пользователем", request);
+                        user.Logger.Log("Хочет связаться с пользователем");
                         _clients[connect.Name].Socket.Send(new ServerToClientConnect(user.Name, user.Port, remoteIpEndPoint.Address.ToString(), connect.Key));
                     }
-                    else user.LogWarn("Пытается связаться с неизвестным пользователем", request);
+                    else user.Logger.Log("Пытается связаться с неизвестным пользователем");
                 }
-                else user.LogWarn("Неизвестный или неправильный запрос", request);
+                else user.Logger.Log("Неизвестный или неправильный запрос");
             }
-            user.LogError("Отключился");
+            user.Logger.Log("Отключился");
         }
         catch (Exception ex)
         {
-            user.LogError(ex);
-        }
-    }
-
-    public void Log(string user)
-    {
-        if (_clients.ContainsKey(user))
-        {
-            _clients[user].Socket.Log();
+            user.Logger.Log(ex.Message);
         }
     }
 }

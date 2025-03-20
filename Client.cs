@@ -9,12 +9,14 @@ class Client
     private string _name;
     private Dictionary<string, SocketHandler> _peers = new();
     private int _localPort;
+    LoggerClientListBox logger;
 
-    public Client(string name, int port)
+    public Client(string name, int port, LoggerClientListBox logger)
     {
         _name = name;
+        this.logger = logger;
         _localPort = port;
-        _serverSocket = new SocketHandler(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        _serverSocket = new SocketHandler(logger, AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
     }
 
     public void Start(string serverIp, int serverPort)
@@ -63,14 +65,15 @@ class Client
     /// <returns></returns>
     public void ConnectToPeer(string peerIp, int peerPort, string peerName, string peerKey)
     {
-        Core.Log($"Подключаемся к {peerName}", ConsoleColor.Yellow);
-        SocketHandler peerSocket = new SocketHandler(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
+        LoggerClientListBox logs = logger.Clone();
+        logger.Log($"Подключаемся к {peerName}"/*, ConsoleColor.Yellow*/);
+        SocketHandler peerSocket = new SocketHandler(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), logs);
         peerSocket.Socket.Connect(new IPEndPoint(IPAddress.Parse(peerIp), peerPort));
 
         peerSocket.Send(new ClientToClientConnect(_name, "")); // Отправляем своё имя, чтобы другой клиент знал, кто подключился
         _peers[peerName] = peerSocket;
 
-        ListenToPeer(peerName, peerSocket);
+        ListenToPeer(peerName, peerSocket, logs);
     }
     /// <summary>
     /// Ожидаем подключение других пользователей
@@ -85,7 +88,8 @@ class Client
         while (true)
         {
             Socket incomingClient = await listener.AcceptAsync();
-            _ = Task.Run(() => HandleIncomingConnection(new SocketHandler(incomingClient)));
+            LoggerClientListBox logs = logger.Clone();
+            _ = Task.Run(() => HandleIncomingConnection(new SocketHandler(incomingClient, logs), logs));
         }
     }
     /// <summary>
@@ -93,19 +97,19 @@ class Client
     /// </summary>
     /// <param name="incomingClient"></param>
     /// <returns></returns>
-    private void HandleIncomingConnection(SocketHandler incomingClient)
+    private void HandleIncomingConnection(SocketHandler incomingClient, LoggerClientListBox logs)
     {
         JObject request = incomingClient.GetJObject();
-        Core.Log($"{request}", ConsoleColor.DarkYellow);
+        logs.Log($"{request}"/*, ConsoleColor.DarkYellow*/);
         ClientToClientConnect? connect = ClientToClientConnect.Convert(request);
         if (connect != null)
         {
             _peers[connect.Name] = incomingClient;
-            ListenToPeer(connect.Name, incomingClient);
+            ListenToPeer(connect.Name, incomingClient, logs);
         }
         else
         {
-            Core.Log("Неправильный тип запроса", ConsoleColor.DarkRed);
+            //Core.Log("Неправильный тип запроса", ConsoleColor.DarkRed);
         }
     }
     /// <summary>
@@ -114,7 +118,7 @@ class Client
     /// <param name="peerName"></param>
     /// <param name="peerSocket"></param>
     /// <returns></returns>
-    private void ListenToPeer(string peerName, SocketHandler peerSocket)
+    private void ListenToPeer(string peerName, SocketHandler peerSocket, LoggerClientListBox logs)
     {
         try
         {
@@ -125,11 +129,12 @@ class Client
                 ClientToClientUDP? udp = ClientToClientUDP.Convert(request);
                 if (message != null)
                 {
-                    Core.Log($"{peerName}: {message.Text}", ConsoleColor.Green);
+                    logs.Message(peerName, message.Text);
+                    //Core.Log($"{peerName}: {message.Text}", ConsoleColor.Green);
                 }
-                else if (udp != null)
+                /*else if (udp != null)
                 {
-                    Core.Log($"{peerName} udp {udp.Port}", ConsoleColor.Green);
+                    //Core.Log($"{peerName} udp {udp.Port}", ConsoleColor.Green);
                     //TODO подключиться к сокету
                     Task.Run(() =>
                     {
@@ -139,10 +144,10 @@ class Client
                         socketUdp.Connect(new IPEndPoint((peerSocket.Socket.RemoteEndPoint as IPEndPoint).Address, udp.Port));
                         _ = Task.Run(() => UdpSender(socketUdp, peerName));
                     });
-                }
+                }*/
                 else
                 {
-                    Core.Log($"{peerName}: Неизвестный запрос:{request}", ConsoleColor.DarkRed);
+                    //Core.Log($"{peerName}: Неизвестный запрос:{request}", ConsoleColor.DarkRed);
                 }
             }
         }
@@ -163,6 +168,7 @@ class Client
         if (_peers.ContainsKey(user))
         {
             _peers[user].Send(message);
+            ((LoggerClientListBox)_peers[user].Logger).Message("", text);
             return true;
         }
         //Иначе запрашиваем сервер, на соединение с пользователем
@@ -170,6 +176,7 @@ class Client
         {
             //TODO лочить _peers[user] пока не появится соединение так-же учесть верефикацию через key
             _serverSocket.Send(new ClientToServerConnect(user, ""));
+            ((LoggerClientListBox)_peers[user].Logger).Message("", text);
             //ждем подлючение от user, после чего отправляем сообщение
             for (int i = 0; i < 6000; i++)
             {
@@ -273,18 +280,5 @@ class Client
         Random random = new Random();
         random.NextBytes(bytes);
         return bytes;
-    }
-
-    public void Log(string user)
-    {
-        if (_peers.ContainsKey(user))
-        {
-            _peers[user].Log();
-
-        }
-    }
-    public void Log()
-    {
-        _serverSocket.Log();
     }
 }

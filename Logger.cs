@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-class Logger
+public class Logger
 {
     public virtual void Log(string text)
     {

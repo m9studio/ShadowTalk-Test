@@ -6,24 +6,18 @@ using Struct;
 
 public class SocketHandler
 {
-    private List<string> trace = new List<string>();
-    public void Log()
-    {
-        foreach(string item in trace)
-        {
-            Core.Log(item, ConsoleColor.Blue);
-        }
-    }
+    public Logger Logger;
 
 
     private Socket socket;
     public Socket Socket => socket;
     public bool Connected => socket.Connected;
-    public SocketHandler(Socket socket)
+    public SocketHandler(Socket socket, Logger logger)
     {
         this.socket = socket;
+        Logger = logger;
     }
-    public SocketHandler(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) : this(new Socket(addressFamily, socketType, protocolType)) { }
+    public SocketHandler(Logger logger, AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) : this(new Socket(addressFamily, socketType, protocolType), logger) { }
     public void Connect(EndPoint remoteEP) => socket.Connect(remoteEP);
     public void Connect(IPAddress address, int port) => socket.Connect(new IPEndPoint(address, port));
     public void Connect(string address, int port) => socket.Connect(IPAddress.Parse(address), port);
@@ -46,12 +40,12 @@ public class SocketHandler
 
         socket.Send(message);
 
-        trace.Add("Send: " + hex(message));
+        Logger.Log("Send: " + hex(message));
     }
     public void Send(string text)
     {
+        Logger.Log("Send: " + text);
         Send(Encoding.UTF8.GetBytes(text));
-        trace.Add("Send: " + text);
     }
     public void Send(JObject data) => Send(data.ToString());
     public void Send(StructData data) => Send(data.ToString());
@@ -78,13 +72,13 @@ public class SocketHandler
                 throw new Exception("Соединение было закрыто");
             totalReceived += bytes;
         }
-        trace.Add("Get: " + hex(sizeBuffer) + hex(buffer));
+        Logger.Log("Get:\n" + hex(sizeBuffer) + hex(buffer));
         return buffer;
     }
     public string GetString()
     {
         string data = Encoding.UTF8.GetString(GetBytes());
-        trace.Add("Get: " + data);
+        Logger.Log("Get:\n" + data);
         return data;
     }
     public JObject GetJObject() => JObject.Parse(GetString());

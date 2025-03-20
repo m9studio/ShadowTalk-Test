@@ -3,6 +3,7 @@
 public partial class FormClient : Form
 {
     Client client = null;
+    LoggerClientListBox logger;
     public FormClient()
     {
         InitializeComponent();
@@ -14,8 +15,9 @@ public partial class FormClient : Form
         }
         name = name.Trim();
 
+        logger = new LoggerClientListBox(LogListBox, ChatListBox);
+        client = new Client(name, Core.NewClientPort(), logger);
 
-        client = new Client(name, Core.NewClientPort());
         Shown += Connect;//TODO правильно ли?
         Text = name;
         AddLeftBorder(LogPanel);
@@ -168,6 +170,8 @@ public partial class FormClient : Form
         ChatTextBox.Text = "";
         ChatTextBox.Enabled = false;
         ChatLabel.Text = "";
+        //get user
+        logger.Action = true;
     }
     private void ChatShow(string user)
     {
@@ -177,6 +181,8 @@ public partial class FormClient : Form
         ChatTextBox.Text = "";
         ChatTextBox.Enabled = true;
         ChatLabel.Text = user;
+        //get user
+        logger.Action = false;
     }
 
     private void UsersListBox_SelectedIndexChanged(object sender, EventArgs e)
