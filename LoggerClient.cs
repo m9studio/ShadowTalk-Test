@@ -71,7 +71,7 @@
     public void Message(string user, string text)
     {
 
-        text = user + ":\n" + text.Replace("\n", "\n\t");
+        text = user + ":\n\t" + text.Replace("\n", "\n\t");
         _message.Add(text);
         message.Invoke(new Action(() =>
         {

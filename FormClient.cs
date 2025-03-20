@@ -115,27 +115,10 @@ public partial class FormClient : Form
     }
     private void ChatButton_Click(object sender, EventArgs e)
     {
-        //TODO отправка сообщения
+        string text = ChatTextBox.Text;
+        ChatTextBox.Text = "";
+        Task.Run(() => client.SendMessage(ChatLabel.Text, text));
     }
-
-    /// <summary>
-    /// Временный список
-    /// </summary>
-    List<string> users = new List<string>()
-    {
-        "ars",
-        "arsen",
-        "clu",
-        "gru",
-        "io",
-        "tor",
-        "torpeda",
-        "tron",
-        "zed",
-        "vi",
-        "vicktor",
-        "vicktoria"
-    };
 
     private void UsersTextBox_TextChanged(object? sender, EventArgs? e)
     {
@@ -148,7 +131,7 @@ public partial class FormClient : Form
         }
         startName = startName.Trim().ToLower();
 
-        foreach (string user in users)
+        foreach (string user in client._peers.Keys)
         {
             if (user.StartsWith(startName))
             {
@@ -156,7 +139,7 @@ public partial class FormClient : Form
             }
         }
 
-        if (startName != "" && !users.Contains(startName))
+        if (startName != "" && !client._peers.Keys.Contains(startName))
         {
             UsersListBox.Items.Add(startName + " (new chat)");
         }
@@ -164,25 +147,34 @@ public partial class FormClient : Form
 
     private void ChatHide()
     {
-        //TODO доделать
-        LogListBox.Items.Clear();
-        ChatListBox.Items.Clear();
+        try
+        {
+            ((LoggerClient)client._peers[ChatLabel.Text].Logger).Action = false;
+        }
+        catch (Exception) { }
         ChatTextBox.Text = "";
         ChatTextBox.Enabled = false;
         ChatLabel.Text = "";
-        //get user
         logger.Action = true;
     }
     private void ChatShow(string user)
     {
-        //TODO доделать
-        LogListBox.Items.Clear();
-        ChatListBox.Items.Clear();
+        try
+        {
+            ((LoggerClient)client._peers[ChatLabel.Text].Logger).Action = false;
+        }
+        catch (Exception) { }
+        logger.Action = false;
+
+
         ChatTextBox.Text = "";
         ChatTextBox.Enabled = true;
         ChatLabel.Text = user;
-        //get user
-        logger.Action = false;
+        try
+        {
+            ((LoggerClient)client._peers[ChatLabel.Text].Logger).Action = true;
+        }
+        catch (Exception) { }
     }
 
     private void UsersListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -190,13 +182,11 @@ public partial class FormClient : Form
         if (UsersListBox.SelectedItem != null)
         {
             string item = (string)UsersListBox.SelectedItem;
-            if (users.Contains(item)){
-                //TODO загружаем чат
+            if (client._peers.Keys.Contains(item)){
                 ChatShow(item);
             }
             else
             {
-                //TODO просто открываем для начала чата
                 ChatShow(UsersTextBox.Text);
             }
         }

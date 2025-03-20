@@ -129,6 +129,7 @@
         ChatListBox.ItemHeight = 15;
         ChatListBox.Location = new Point(0, 16);
         ChatListBox.Name = "ChatListBox";
+        ChatListBox.SelectionMode = SelectionMode.None;
         ChatListBox.Size = new Size(383, 370);
         ChatListBox.TabIndex = 2;
         // 

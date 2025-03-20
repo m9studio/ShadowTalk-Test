@@ -7,7 +7,7 @@ class Client
 {
     private SocketHandler _serverSocket;
     private string _name;
-    private Dictionary<string, SocketHandler> _peers = new();
+    public Dictionary<string, SocketHandler> _peers = new();
     private int _localPort;
     LoggerClient logger;
 
@@ -176,7 +176,6 @@ class Client
         {
             //TODO лочить _peers[user] пока не появится соединение так-же учесть верефикацию через key
             _serverSocket.Send(new ClientToServerConnect(user, ""));
-            ((LoggerClient)_peers[user].Logger).Message("", text);
             //ждем подлючение от user, после чего отправляем сообщение
             for (int i = 0; i < 6000; i++)
             {
@@ -184,6 +183,7 @@ class Client
                 if (_peers.ContainsKey(user))
                 {
                     _peers[user].Send(message);
+                    ((LoggerClient)_peers[user].Logger).Message("", text);
                     return true;
                 }
             }
